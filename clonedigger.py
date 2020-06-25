@@ -2,16 +2,15 @@ import sys
 import os
 import traceback
 from argparse import ArgumentParser
-from . import ast_suppliers
-from . import clone_detection_algorithm
-from . import arguments
-from . import html_report
+
+sys.path.insert(0, "")
+import ast_suppliers
+import clone_detection_algorithm
+import arguments
+import html_report
 
 
 def main(override: bool = True):
-    if override:
-        (options, source_file_names) = [1, 2]
-
     cmdline = ArgumentParser(
         usage="""To run Clone Digger type:
 python clonedigger.py [OPTION]... [SOURCE FILE OR DIRECTORY]...
@@ -26,6 +25,7 @@ Notice:
 The semantics of threshold options is discussed in the paper "Duplicate code detection using anti-unification", which can be downloaded from the site http://clonedigger.sourceforge.net . All arguments are optional. Supported options are: 
 """
     )
+
     """
         cmdline.add_argument(
         "-l",
@@ -146,7 +146,12 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
         **arguments.__dict__
     )
 
-    (options, source_file_names) = cmdline.parse_args()
+    tmp = cmdline.parse_args()
+    if override:
+        tmp = cmdline.parse_args("test_t.py")
+
+    (options, source_file_names) = tmp
+
     if options.f_prefixes:  # != None:
         func_prefixes = tuple(
             [x.strip() for x in options.f_prefixes.split(",")]

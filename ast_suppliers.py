@@ -19,7 +19,7 @@
 # Abstract Syntax Tree suppliers
 abstract_syntax_tree_suppliers = {}
 
-from . import python_compiler
+import python_compiler
 
 abstract_syntax_tree_suppliers[
     "python"
