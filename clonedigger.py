@@ -10,7 +10,7 @@ from . import html_report
 
 def main(override: bool = True):
     if override:
-        (options, source_file_names) = []
+        (options, source_file_names) = [1, 2]
 
     cmdline = ArgumentParser(
         usage="""To run Clone Digger type:
