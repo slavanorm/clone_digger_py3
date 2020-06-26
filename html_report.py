@@ -25,10 +25,9 @@ import traceback
 import os.path
 from html import escape
 
-from . import arguments
-from . import anti_unification
-from . import python_compiler
-from .abstract_syntax_tree import AbstractSyntaxTree
+import arguments
+import anti_unification
+from abstract_syntax_tree import AbstractSyntaxTree
 
 
 class Report:

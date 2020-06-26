@@ -1,27 +1,8 @@
-#    Copyright 2008 Peter Bulychev
-#
-#    This file is part of Clone Digger.
-#
-#    Clone Digger is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    Clone Digger is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with Clone Digger.  If not, see <http://www.gnu.org/licenses/>.
-
 import sys
 import pdb
-import copy
-from .anti_unification import *
-from .anti_unification import verbose
-from .abstract_syntax_tree import *
-from . import arguments
+from classes import *
+from abstract_syntax_tree import *
+import arguments
 
 
 def findDuplicateCode(source_files, report):
@@ -42,7 +23,7 @@ def findDuplicateCode(source_files, report):
         )
         sys.exit(0)
 
-    if verbose:
+    if arguments.verbose:
         n_sequences = len(sequences_lengths)
         avg_seq_length = sum(sequences_lengths) / float(
             n_sequences
@@ -118,7 +99,7 @@ def findDuplicateCode(source_files, report):
             statements = hash_to_statement[h]
             for statement in statements:
                 processed_statements_count += 1
-                if verbose and (
+                if arguments.verbose and (
                     (processed_statements_count % 1000) == 0
                 ):
                     print(
@@ -157,7 +138,7 @@ def findDuplicateCode(source_files, report):
             clusters = clusters_map[h]
             for statement in hash_to_statement[h]:
                 processed_statements_count += 1
-                if verbose and (
+                if arguments.verbose and (
                     (processed_statements_count % 1000) == 0
                 ):
                     print(
@@ -378,15 +359,15 @@ def findDuplicateCode(source_files, report):
                 ret_clones.append(clone)
         return ret_clones
 
-    if verbose:
+    if arguments.verbose:
         print("Number of statements: ", statement_count)
         print("Calculating size for each statement...", end=" ")
         sys.stdout.flush()
     calc_statement_sizes()
-    if verbose:
+    if arguments.verbose:
         print("done")
 
-    if verbose:
+    if arguments.verbose:
         print("Building statement hash...", end=" ")
         sys.stdout.flush()
     report.startTimer("Building statement hash")
@@ -399,7 +380,7 @@ def findDuplicateCode(source_files, report):
             dcup_hash=True
         )
     report.stopTimer()
-    if verbose:
+    if arguments.verbose:
         print("done")
         print(
             "Number of different hash values: ",
@@ -413,13 +394,13 @@ def findDuplicateCode(source_files, report):
         print("Marking each statement with its hash value")
         mark_using_hash(hash_to_statement)
     else:
-        if verbose:
+        if arguments.verbose:
             print("Building patterns...", end=" ")
             sys.stdout.flush()
         report.startTimer("Building patterns")
         clusters_map = build_unifiers(hash_to_statement)
         report.stopTimer()
-        if verbose:
+        if arguments.verbose:
             print(Cluster.count, "patterns were discovered")
             print(
                 "Choosing pattern for each statement...",
@@ -429,11 +410,11 @@ def findDuplicateCode(source_files, report):
         report.startTimer("Marking similar statements")
         clusterize(hash_to_statement, clusters_map)
         report.stopTimer()
-        if verbose:
+        if arguments.verbose:
             print("done")
 
     if arguments.report_unifiers:
-        if verbose:
+        if arguments.verbose:
             print(
                 "Building reverse hash for reporting ...",
                 end=" ",
@@ -447,10 +428,10 @@ def findDuplicateCode(source_files, report):
                     reverse_hash[mark] = []
                 reverse_hash[mark].append(statement)
         report.setMarkToStatementHash(reverse_hash)
-        if verbose:
+        if arguments.verbose:
             print("done")
 
-    if verbose:
+    if arguments.verbose:
         print(
             "Finding similar sequences of statements...",
             end=" ",
@@ -465,7 +446,7 @@ def findDuplicateCode(source_files, report):
     report.startTimer("Finding similar sequences of statements")
     duplicate_candidates = findHugeSequences()
     report.stopTimer()
-    if verbose:
+    if arguments.verbose:
         print(
             len(duplicate_candidates), " sequences were found"
         )
@@ -477,15 +458,15 @@ def findDuplicateCode(source_files, report):
         report.stopTimer()
     else:
         clones = duplicate_candidates
-    if verbose:
+    if arguments.verbose:
         print(len(clones), "clones were found")
     if arguments.distance_threshold != -1:
-        if verbose:
+        if arguments.verbose:
             print("Removing dominated clones...", end=" ")
             sys.stdout.flush()
         old_clone_count = len(clones)
         clones = remove_dominated_clones(clones)
-        if verbose:
+        if arguments.verbose:
             print(
                 len(clones) - old_clone_count,
                 "clones were removed",

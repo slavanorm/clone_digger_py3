@@ -13,28 +13,30 @@ import html_report
 def main(override: bool = True):
     cmdline = ArgumentParser(
         usage="""To run Clone Digger type:
-python clonedigger.py [OPTION]... [SOURCE FILE OR DIRECTORY]...
-
-The typical usage is:
-python clonedigger.py source_file_1 source_file_2 ...
-  or
-python clonedigger.py path_to_source_tree
-Don't forget to remove automatically generated sources, tests and third party libraries from the source tree.
-
-Notice:
-The semantics of threshold options is discussed in the paper "Duplicate code detection using anti-unification", which can be downloaded from the site http://clonedigger.sourceforge.net . All arguments are optional. Supported options are: 
-"""
+        python clonedigger.py [OPTION]... [SOURCE FILE OR DIRECTORY]...
+        
+        The typical usage is:
+        python clonedigger.py source_file_1 source_file_2 ...
+          or
+        python clonedigger.py path_to_source_tree
+        Don't forget to remove automatically generated sources, tests and third 
+        party libraries from the source tree.
+        
+        Notice:
+        The semantics of threshold options is discussed in the paper "Duplicate 
+        code detection using anti-unification", which can be downloaded from the 
+        site http://clonedigger.sourceforge.net . All arguments are optional. 
+        Supported options are: 
+        """
     )
-
-    """
-        cmdline.add_argument(
+    cmdline.add_argument(
         "-l",
         "--language",
         dest="language",
         type=str,
-        choices=["python", "java", "lua", "javascript", "js"],
+        choices=["python", "java", "lua", "javascript", "js",],
         help="the programming language",
-    )"""
+    )
     cmdline.add_argument(
         "--no-recursion",
         dest="no_recursion",
@@ -146,12 +148,14 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
         **arguments.__dict__
     )
 
-    tmp = cmdline.parse_args()
+    options = cmdline.parse_args()
     if override:
-        tmp = cmdline.parse_args("test_t.py")
-
-    (options, source_file_names) = tmp
-
+        options = cmdline.parse_args(
+            ["--file-list", "test_t.py"]
+        )
+    # options = options.__dict__
+    if isinstance(options.file_list, str):
+        options.file_list = [options.file_list]
     if options.f_prefixes:  # != None:
         func_prefixes = tuple(
             [x.strip() for x in options.f_prefixes.split(",")]
@@ -178,22 +182,9 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
 
     output_file_name = options.output
 
-    for option in options:  # ? cmdline.option_list:
-        if (
-            option.dest == "file_list" and options.file_list
-        ):  # != None:
-            source_file_names.extend(
-                open(options.file_list).read().split()
-            )
-            continue
-        elif option.dest is None:
-            continue
-        setattr(
-            arguments,
-            option.dest,
-            getattr(options, option.dest),
-        )
-
+    for k, v in vars(options).items():
+        if not k.startswith("_"):
+            arguments.__dict__[k] = v
     if options.distance_threshold is None:
         arguments.distance_threshold = (
             supplier.distance_threshold
@@ -239,7 +230,7 @@ The semantics of threshold options is discussed in the paper "Duplicate code det
             ]
             yield dirpath, dirs, files
 
-    for file_name in source_file_names:
+    for file_name in options.file_list:
         if os.path.isdir(file_name):
             if arguments.no_recursion:
                 # dirpath = file_name

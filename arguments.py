@@ -6,3 +6,6 @@ print_time = True
 force = False
 use_diff = False
 clusterize_using_hash = False
+free_variable_cost = 0.5
+verbose = True
+free_variables_count = 1  # mb its wrong

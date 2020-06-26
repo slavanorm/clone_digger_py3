@@ -21,7 +21,7 @@ import ast
 
 # from . import logilab.astng.nodes # todo reconcile
 
-from .abstract_syntax_tree import *
+from abstract_syntax_tree import *
 
 
 class PythonNodeLeaf:
@@ -236,6 +236,10 @@ class PythonCompilerSourceFile(SourceFile):
 
         self._setTree(
             rec_build_tree(
-                ast.parse(open(file_name).read(), mode="eval",)
+                ast.parse(
+                    source=open(file_name).read(),
+                    filename=file_name,
+                    mode="eval",
+                )
             )
         )
