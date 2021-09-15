@@ -1,14 +1,13 @@
-python3 version for clone digger
+application to find duplicates in code based on AST
 
-application to find duplicates in code
-
-only python3 supported
+how to run:
+> import clone_digger_py3  
+> clone_digger_py3.main(path_to_file_or_folder)
 
 todo:
-tests for coverage
-cleanup classes
-refactor html report
+- tests for coverage
+- cleanup classes
+- refactor html report
 
-
-original docs
+original project  
 https://sourceforge.net/projects/clonedigger/

@@ -5,7 +5,9 @@ import sys
 import os
 from argparse import ArgumentParser
 
-def main(override: [os.path, bool] = True):
+sys.path.insert(0, "")
+
+def main(override: [os.path, bool] = False):
     def parse_file(file_name, func_prefixes):
         # try:
         print("Parsing ", file_name, "...")
@@ -229,4 +231,4 @@ def main(override: [os.path, bool] = True):
 
 if __name__ == "__main__":
     # parse path, save a output.html
-    main(".")
+    main()

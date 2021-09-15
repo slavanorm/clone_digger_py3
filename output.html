@@ -47,7 +47,7 @@
     <P>Source files: 7</P>
         <a href = "javascript:unhide('files');">Click here to show/hide file names</a><div id="files" class="hidden"><P><B>Source files:</B><BR>./test_me.py, <BR>./main.py, <BR>./global_settings.py, <BR>./backend/html_report.py, <BR>./backend/clone_detection_algorithm.py, <BR>./backend/classes.py, <BR>./backend/python3_related.py</P></div>
         <P>Clones detected: 21</P>
-        <P>163 of 1597 lines are duplicates (10.21%) </P>
+        <P>163 of 1598 lines are duplicates (10.20%) </P>
 <P>
 <B>Parameters<BR> </B>
 clustering_threshold = 10<BR>
@@ -58,15 +58,15 @@ clusterize_using_hash = False<BR>
 clusterize_using_dcup = False<BR>
 </P> 
         
-    <B>Time elapsed</B><BR>Construction of AST : 2.90 seconds<BR>
-Building statement hash : 0.01 seconds<BR>
-Building patterns : 0.58 seconds<BR>
-Marking similar statements : 1.28 seconds<BR>
-Finding similar sequences of statements : 0.14 seconds<BR>
-Refining candidates : 0.49 seconds<BR>
- Total time: 5.40<BR>
- Started at: Wed Sep 15 15:52:21 2021<BR>
- Finished at: Wed Sep 15 15:52:27 2021
+    <B>Time elapsed</B><BR>Construction of AST : 0.10 seconds<BR>
+Building statement hash : 0.00 seconds<BR>
+Building patterns : 0.11 seconds<BR>
+Marking similar statements : 0.23 seconds<BR>
+Finding similar sequences of statements : 0.02 seconds<BR>
+Refining candidates : 0.12 seconds<BR>
+ Total time: 0.58<BR>
+ Started at: Wed Sep 15 17:11:46 2021<BR>
+ Finished at: Wed Sep 15 17:11:47 2021
     <P><B>Clone # 1</B><BR>Distance between two fragments = 0 <BR>Clone size = 12<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 48</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 195</TD></TR><TR>
 <TD>
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "It starts at %s:%d."                        % (                            first_statement.getSourceFile().getFileName(),                            min(                                first_statement.getCoveredLineNumbers()</TD>
