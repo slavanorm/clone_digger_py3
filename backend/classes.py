@@ -1,7 +1,12 @@
-import arguments
+import global_settings
+import ast
 import copy
 
-# from previous file abstract_syntax_tree
+verbose = True
+free_variables_count = 1
+free_variable_cost = 0.5
+
+
 class ParseError:
     def __init__(self, descr):
         self._descr = descr
@@ -39,12 +44,6 @@ class SourceFile:
         # error here
         return self._source_lines[n]
 
-    def _setTree(self, tree):
-        self._tree = tree
-
-    def getTree(self):
-        return self._tree
-
     def getFileName(self):
         return self._file_name
 
@@ -60,8 +59,8 @@ class AbstractSyntaxTree:
         self._hash = None
         self._source_file = source_file
         self._is_statement = False
-        if name:
-            self.setName(name)
+        self.ast_node = None
+        self._name = name or "AbstractSyntaxTree"
 
     def getSourceFile(self):
         return self._source_file
@@ -71,18 +70,6 @@ class AbstractSyntaxTree:
 
     def getMark(self):
         return self._mark
-
-    def markAsStatement(self, val=True):
-        self._is_statement = val
-
-    def isStatement(self):
-        return self._is_statement
-
-    def setName(self, name):
-        self._name = name
-
-    def getLineNumbers(self):
-        return self._line_numbers
 
     def getCoveredLineNumbers(self):
         return self._covered_line_numbers
@@ -97,7 +84,7 @@ class AbstractSyntaxTree:
         r = []
         t = self.getParent()
         while t:
-            if t.isStatement():
+            if isinstance(t,ast.stmt):
                 r.append(t)
             t = t.getParent()
         return r
@@ -153,35 +140,13 @@ class AbstractSyntaxTree:
             )
         return self._height
 
-    def getHeight(self):
-        return self._height
-
     def addChild(self, child, save_parent=False):
         if not save_parent:
             child.setParent(self)
         self._childs.append(child)
 
-    def setChildCount(self, count):
-        assert not self._childs
-        self._childs = count * [None]
-
-    def setNextUndefinedChild(self, c):
-        for i in range(len(self.getChilds())):
-            if self.getChilds()[i] == None:
-                self._childs[i] = c
-        assert ()
-
-    def __str__(self):
-        return (
-            " ( "
-            + self.getName()
-            + " ".join(
-                [str(child) for child in self.getChilds()]
-            )
-            + " ) "
-        )
-
     def getFullHash(self):
+        # todo: try
         return self.getDCupHash(-1)
 
     def getDCupHash(self, level):
@@ -206,9 +171,9 @@ class AbstractSyntaxTree:
             self._hash = hash(
                 self.getDCupHash(3) + hash(self.getName())
             )
-        return self._hash
+        #       return  hash(self.getDCupHash(3) + hash(self.getName()))
 
-    #       return  hash(self.getDCupHash(3) + hash(self.getName()))
+        return self._hash
 
     def __eq__(self, tree2):
         tree1 = self
@@ -223,23 +188,37 @@ class AbstractSyntaxTree:
                 return False
         return True
 
-    def getAllStatementSequences(self):
+    def getStatementSequences(self):
+
+        not_empty = (
+            lambda x: (not x.isEmpty())
+            and len(x.getCoveredLineNumbers())
+            >= global_settings.size_threshold
+        )
+
         r = []
-        current = StatementSequence()
-        for child in self.getChilds():
-            if child.isStatement():
+        current = StatementSequence(
+            source_file=self._source_file
+        )
+
+        if self._source_file is None:
+            v = 1
+
+        for child in self._childs:
+            if isinstance(child.ast_node, ast.stmt):
                 current.addStatement(child)
-            else:
-                if (not current.isEmpty()) and len(
-                    current.getCoveredLineNumbers()
-                ) >= arguments.size_threshold:
-                    r.append(current)
-                    current = StatementSequence()
-            r.extend(child.getAllStatementSequences())
-        if (not current.isEmpty()) and len(
-            current.getCoveredLineNumbers()
-        ) >= arguments.size_threshold:
-            r.append(current)
+            elif not_empty(current):
+                r += [current]
+                current = StatementSequence(
+                    source_file=self._source_file
+                )
+
+            # recursion here
+            r += child.getStatementSequences()
+
+        if not_empty(current):
+            r += [current]
+
         return r
 
     def storeSize(self):
@@ -248,7 +227,7 @@ class AbstractSyntaxTree:
 
         def rec_calc_size(t):
             r = 0
-            if not t in observed:
+            if t not in observed:
                 if t.getChildCount():
                     for c in t.getChilds():
                         r += rec_calc_size(c)
@@ -257,7 +236,7 @@ class AbstractSyntaxTree:
                     if t.getName() == "None":
                         self._none_count += 1
                     if t.__class__.__name__ == "FreeVariable":
-                        r += arguments.free_variable_cost
+                        r += free_variable_cost
                     else:
                         r += 1
             return r
@@ -302,11 +281,21 @@ class AbstractSyntaxTree:
 
         return rec_calc_size(self)
 
+    def as_string(self):
+        return "".join(
+            [
+                self._source_file._source_lines[e]
+                for e in sorted(
+                    list(self._covered_line_numbers)
+                )
+            ]
+        )
+
 
 class StatementSequence:
-    def __init__(self, sequence=[]):
+    def __init__(self, sequence=[], source_file=None):
         self._sequence = []
-        self._source_file = None
+        self._source_file = source_file
         for s in sequence:
             self.addStatement(s)
 
@@ -324,7 +313,7 @@ class StatementSequence:
 
     def addStatement(self, statement):
         self._sequence.append(statement)
-        if self._source_file:
+        if not self._source_file:
             self._source_file = statement.getSourceFile()
         else:
             assert (
@@ -337,9 +326,6 @@ class StatementSequence:
     def __len__(self):
         return self._sequence.__len__()
 
-    def __str__(self):
-        return ",".join([str(s) for s in self])
-
     def getWeight(self):
         return sum(
             [
@@ -351,21 +337,8 @@ class StatementSequence:
     def getSourceFile(self):
         return self._source_file
 
-    def getSourceLines(self):
-        source_line_numbers = set([])
-        r = []
-        for statement in self:
-            r.extend(statement.getSourceLines())
-        return r
-
-    def getLineNumbers(self):
-        r = []
-        for statement in self:
-            r.extend(statement.getLineNumbers())
-        return r
-
     def getLineNumberHashables(self):
-        source_file_name = self.getSourceFile().getFileName()
+        source_file_name = self._source_file.getFileName()
         line_numbers = self.getCoveredLineNumbers()
         return set(
             [
@@ -396,9 +369,6 @@ class PairSequences:
 
     def __getitem__(self, *args):
         return self._sequences.__getitem__(*args)
-
-    def __str__(self):
-        return ";\t".join([str(s) for s in self])
 
     def getWeight(self):
         assert self[0].getWeight() == self[1].getWeight()
@@ -431,7 +401,6 @@ class PairSequences:
         )
 
 
-# from previous file anti_unification
 class FreeVariable(AbstractSyntaxTree):
     free_variables_count = 1
 
@@ -473,12 +442,123 @@ class Substitution:
         for (u, tree) in list(self.getMap().items()):
             ret += (
                 tree.getSize(False)
-                - arguments.free_variable_cost
+                - global_settings.free_variable_cost
             )
         return ret
 
 
+class SuffixTree:
+    class StringPosition:
+        def __init__(self, string, position, prevelem):
+            self.string = string
+            self.position = position
+            self.prevelem = prevelem
+
+    class SuffixTreeNode:
+        def __init__(self):
+            self.childs = {}  #
+            self.string_positions = []
+            self.ending_strings = []
+
+    def __init__(self, f_code):
+        self._node = self.SuffixTreeNode()
+        self._f_code = f_code
+
+    def _add(self, string, prevelem):
+        pos = 0
+        node = self._node
+        for pos in range(len(string)):
+            e = string[pos]
+            code = self._f_code(e)
+            node.string_positions.append(
+                self.StringPosition(string, pos, prevelem)
+            )
+            if code not in node.childs:
+                node.childs[code] = self.SuffixTreeNode()
+            node = node.childs[code]
+        node.ending_strings.append(
+            self.StringPosition(string, pos + 1, prevelem)
+        )
+
+    def add(self, string):
+        for i in range(len(string)):
+            if i == 0:
+                prevelem = None
+            else:
+                prevelem = self._f_code(string[i - 1])
+            self._add(string[i:], prevelem)
+
+    def getBestMaxSubstrings(
+        self,
+        threshold,
+        f,
+        f_elem,
+        node=None,
+        initial_threshold=None,
+    ):
+        initial_threshold = threshold or 0
+
+        def check_left_diverse_and_add(s1, s2, p):
+            if (
+                (not s1.prevelem)
+                or (not s2.prevelem)
+                or (s1.prevelem != s2.prevelem)
+            ) and s1.position > p:
+                candidate = (
+                    s1.string[: s1.position - p],
+                    s2.string[: s2.position - p],
+                )
+                if (
+                    f_elem(candidate[0]) >= initial_threshold
+                    or f_elem(candidate[1]) >= initial_threshold
+                ):
+                    r.append(candidate)
+                return True
+            else:
+                return False
+
+        if not node:
+            node = self._node
+        r = []
+        if threshold <= 0:
+            for s1 in node.ending_strings:
+                for s2 in node.string_positions:
+                    if s1.string == s2.string:
+                        continue
+                    check_left_diverse_and_add(s1, s2, 0)
+            for i in range(len(node.ending_strings)):
+                for j in range(i):
+                    s1 = node.ending_strings[i]
+                    s2 = node.ending_strings[j]
+                    check_left_diverse_and_add(s1, s2, 0)
+            for i in range(len(list(node.childs.keys()))):
+                for j in range(i):
+                    c1 = list(node.childs.keys())[i]
+                    c2 = list(node.childs.keys())[j]
+                    for s1 in (
+                        node.childs[c1].string_positions
+                        + node.childs[c1].ending_strings
+                    ):
+                        for s2 in (
+                            node.childs[c2].string_positions
+                            + node.childs[c2].ending_strings
+                        ):
+                            check_left_diverse_and_add(
+                                s1, s2, 1
+                            )
+        for (code, child) in list(node.childs.items()):
+            r += self.getBestMaxSubstrings(
+                threshold - f(code),
+                f,
+                f_elem,
+                child,
+                initial_threshold,
+            )
+        return r
+
+
 class Unifier:
+    # Unifier is used instead of AntiUnifier
     def __init__(self, t1, t2, ignore_parametrization=False):
         def combineSubs(node, s, t):
             # s and t are 2-tuples
@@ -617,3 +697,57 @@ class Cluster:
 
     def getUnifierSize(self):
         return self.getUnifierTree().getSize()
+
+
+if __name__ == "__main__":
+
+    class Elem:
+        def __init__(self, code):
+            self._code = code
+
+        def getCode(self):
+            return self._code
+
+        def __str__(self):
+            return str(self._code)
+
+    def test1():
+        t = SuffixTree()
+        for w in ["abcPeter", "Pet1erbca", "Peter", "aPet0--"]:
+            t.add([Elem(c) for c in w])
+        maxs = t.getBestMaxSubstrings(3)
+        l = []
+        for (s1, s2) in maxs:
+            l.append(
+                [
+                    "".join([str(e) for e in s1]),
+                    "".join([str(e) for e in s2]),
+                ]
+            )
+        assert l == [
+            ["Pe1t", "P2et"],
+            ["P3et", "Pe4t"],
+            ["Pet", "Pet"],
+            ["Pet", "Pet"],
+            ["Pet", "Pet"],
+            ["Peter", "Peter"],
+        ]
+
+    def test2():
+        t = SuffixTree()
+        for w in ["a", "aa"]:
+            t.add([Elem(c) for c in w])
+        maxs = t.getBestMaxSubstrings(0)
+        l = []
+        for (s1, s2) in maxs:
+            l.append(
+                [
+                    "".join([str(e) for e in s1]),
+                    "".join([str(e) for e in s2]),
+                ]
+            )
+        assert l == [["a", "a"], ["a", "a"], ["a", "a"]]
+
+    for s in dir():
+        if s.find("test") == 0:
+            eval(s + "()")

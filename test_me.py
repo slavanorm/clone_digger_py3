@@ -1,14 +1,13 @@
-import sys
-
-sys.path.insert(0, "")
+lambda x: x
 
 from t import complex_thang
 
 
 x = 1
+y = 2
 
 
-def test_complex_thang():
+def test_complex_thang(q=1,w=2):
     assert complex_thang(1) == 1
     assert complex_thang(6) == 1
     assert complex_thang(5) == 1
@@ -27,13 +26,13 @@ def test_2():
 
 
 def test_3():
-    global x
-    if x:
-        assert 1 == 1
-    elif x == 2:
-        assert 6 == 1
+    global y
+    if y:
+        assert 1 == 2
+    elif y == 2:
+        assert 6 == 5
     else:
-        assert 5 == 1
+        assert 5 == 5
     assert 2 is None
 
 

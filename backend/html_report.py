@@ -1,33 +1,14 @@
-#    Copyright 2008 Peter Bulychev
-#
-#    This file is part of Clone Digger.
-#
-#    Clone Digger is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
-#    Clone Digger is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
-#   You should have received a copy of the GNU General Public License
-#   along with Clone Digger.  If not, see <http://www.gnu.org/licenses/>.
-
 import sys
 import time
 import difflib
 import re
-import copy
 import pdb
 import traceback
 import os.path
 from html import escape
 
-import arguments
-import anti_unification
-from abstract_syntax_tree import AbstractSyntaxTree
+import global_settings
+from backend import classes
 
 
 class Report:
@@ -43,17 +24,10 @@ class Report:
     def addErrorInformation(self, error_info):
         self._error_info.append(error_info)
 
-    def addClone(self, clone):
-        self._clones.append(clone)
-
     def sortByCloneSize(self):
-        def f(a, b):
-            return cmp(
-                b.getMaxCoveredLineNumbersCount(),
-                a.getMaxCoveredLineNumbersCount(),
-            )
-
-        self._clones.sort(f)
+        self._clones.sort(
+            key=lambda x: -x.getMaxCoveredLineNumbersCount()
+        )
 
     def startTimer(self, descr):
         self._timers.append([descr, time.time(), time.ctime()])
@@ -195,23 +169,14 @@ class HTMLReport(Report):
                 s += eclipse_start
                 s += "<TR>"
                 for j in [0, 1]:
-                    s += (
-                        '<TD> <a href="clone://%s?%d&%d"> Go to this fragment in Eclipse </a> </TD>'
-                        % (
-                            clone[j]
-                            .getSourceFile()
-                            .getFileName(),
-                            min(
-                                clone[j][
-                                    0
-                                ].getCoveredLineNumbers()
-                            ),
-                            max(
-                                clone[j][
-                                    -1
-                                ].getCoveredLineNumbers()
-                            ),
-                        )
+                    s += '<TD> <a href="clone://%s?%d&%d"> Go to this fragment in Eclipse </a> </TD>' % (
+                        clone[j].getSourceFile().getFileName(),
+                        min(
+                            clone[j][0].getCoveredLineNumbers()
+                        ),
+                        max(
+                            clone[j][-1].getCoveredLineNumbers()
+                        ),
                     )
                     if j == 0:
                         s += "<TD></TD>"
@@ -344,12 +309,12 @@ class HTMLReport(Report):
                             )
                             for i in (0, 1)
                         ]
-                        u = anti_unification.Unifier(
+                        u = classes.Unifier(
                             statements[0], statements[1]
                         )
                         return d, u
 
-                    if arguments.use_diff:
+                    if global_settings.use_diff:
                         (d, u) = use_diff()
                     else:
                         try:
@@ -375,13 +340,13 @@ class HTMLReport(Report):
                                     t,
                                 ):
                                     if not isinstance(
-                                        t, AbstractSyntaxTree
+                                        t, classes.AbstractSyntaxTree
                                     ):
                                         t = t.getParent()
                                     n = NewAsString(
-                                        t.ast_node.as_string()
+                                        str(t.ast_node)
                                     )
-                                    t.ast_node.as_string = n
+                                    t.as_string = n
 
                                 if (t1 in s1) or (t2 in s2):
                                     for t in (t1, t2):
@@ -405,7 +370,7 @@ class HTMLReport(Report):
                                 statements[0],
                                 statements[1],
                             )
-                            u = anti_unification.Unifier(s1, s2)
+                            u = classes.Unifier(s1, s2)
                             rec_correct_as_string(
                                 s1,
                                 s2,
@@ -424,7 +389,7 @@ class HTMLReport(Report):
                             for j in (0, 1):
                                 d[j] = statements[
                                     j
-                                ].ast_node.as_string()
+                                ].as_string()
 
                                 lines = d[j].split("\n")
                                 for ii in range(len(lines)):
@@ -500,14 +465,14 @@ clusterize_using_dcup = %s<BR>
             or 100
             * self.covered_source_lines_count
             / float(self.all_source_lines_count),
-            arguments.clustering_threshold,
-            arguments.distance_threshold,
-            arguments.size_threshold,
-            arguments.hashing_depth,
-            str(arguments.clusterize_using_hash),
-            str(arguments.clusterize_using_dcup),
+            global_settings.clustering_threshold,
+            global_settings.distance_threshold,
+            global_settings.size_threshold,
+            global_settings.hashing_depth,
+            str(global_settings.clusterize_using_hash),
+            str(global_settings.clusterize_using_dcup),
         )
-        if arguments.print_time:
+        if global_settings.print_time:
             timings = ""
             timings += "<B>Time elapsed</B><BR>"
             timings += "<BR>\n".join(
@@ -531,13 +496,8 @@ clusterize_using_dcup = %s<BR>
         marks_report = ""
         if self._mark_to_statement_hash:
             marks_report += "<P>Top 20 statement marks:"
-            marks = list(self._mark_to_statement_hash.keys())
-            marks.sort(
-                lambda y, x: cmp(
-                    len(self._mark_to_statement_hash[x]),
-                    len(self._mark_to_statement_hash[y]),
-                )
-            )
+            marks = list(self._mark_to_statement_hash)
+            marks.sort(key =lambda x: -len(self._mark_to_statement_hash[x]))
             counter = 0
             for mark in marks[:20]:
                 counter += 1
@@ -563,7 +523,7 @@ clusterize_using_dcup = %s<BR>
                 marks_report += "</P>"
 
         warnings = ""
-        if arguments.use_diff:
+        if global_settings.use_diff:
             warnings += "<P>(*) Warning: the highlighting of differences is based on diff and doesn't reflect the tree-based clone detection algorithm.</P>"
         save_to = (
             eclipse_start
@@ -643,7 +603,3 @@ clusterize_using_dcup = %s<BR>
             )
         )
         f.close()
-        if arguments.eclipse_output:
-            f = open(arguments.eclipse_output, "w")
-            f.write(HTML_code)
-            f.close()
