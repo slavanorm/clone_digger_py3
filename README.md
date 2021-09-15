@@ -1,4 +1,4 @@
-application to find duplicates in code based on AST
+application to find duplicates in code of your program
 
 how to run:
 > import clone_digger_py3  
