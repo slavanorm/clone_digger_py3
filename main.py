@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 
 sys.path.insert(0, "")
 
-def main(override: [os.path, bool] = False):
+def main(override:os.path ='test_me.py'):
     def parse_file(file_name, func_prefixes):
         # try:
         print("Parsing ", file_name, "...")
@@ -31,6 +31,9 @@ def main(override: [os.path, bool] = False):
     supplier = python3_related.main
     report = html_report.HTMLReport()
     source_files = []
+
+    if isinstance(override, str):
+        override = [override]
     # region parse options
 
     cmdline = ArgumentParser(
@@ -52,6 +55,12 @@ def main(override: [os.path, bool] = False):
         """
     )
     kwargs = [
+        dict(
+            args='file_list',
+            help='files to parse',
+            nargs='?',
+            default=override
+            ),
         dict(
             args="--no-recursion",
             dest="no_recursion",
@@ -122,6 +131,7 @@ def main(override: [os.path, bool] = False):
             action="append",
             dest="ignore_dirs",
             help="exclude directories from parsing",
+            type=list
         ),
         dict(
             args="--report-unifiers",
@@ -149,31 +159,20 @@ def main(override: [os.path, bool] = False):
         cmdline.add_argument(*args, **kw)
 
     cmdline.set_defaults(
-        ingore_dirs=[],
-        f_prefixes=None,
+        #file_list=override,
+        #ingore_dirs=[],
+        #f_prefixes=None,
         **global_settings.__dict__
     )
     options = cmdline.parse_args()
-    if override:
-        if isinstance(override, str):
-            options = cmdline.parse_args(
-                ["--file-list", override]
-            )
-        else:
-            options = cmdline.parse_args(
-                ["--file-list", "main.py"]
-            )
 
     options.ignore_dirs = options.ignore_dirs or []
     if isinstance(options.file_list, str):
         options.file_list = [options.file_list]
-
     if options.f_prefixes:
-        func_prefixes = tuple(
-            [x.strip() for x in options.f_prefixes.split(",")]
-        )
+        func_prefixes = [x.strip() for x in options.f_prefixes.split(",")]
     else:
-        func_prefixes = ()
+        func_prefixes = []
 
     if options.output is None:
         options.output = "output.html"
@@ -208,10 +207,10 @@ def main(override: [os.path, bool] = False):
                     )
                     if dirnames not in options.ignore_dirs
                     for f in filenames0
-
                 ]
+        else:
+            filenames = options.file_list
     # endregion
-
     for f in filenames:
         if os.path.splitext(f)[1][1:] == supplier.extension:
             parse_file(f, func_prefixes)
