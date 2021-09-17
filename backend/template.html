@@ -1,0 +1,103 @@
+<HTML>
+<HEAD>
+    <TITLE> CloneDigger Report </TITLE>
+    <script type="text/javascript">
+      function unhide(divID) {
+        var item = document.getElementById(divID);
+        if (item) {
+          item.className = (
+            item.className == 'hidden') ? 'unhidden' : 'hidden';
+        }
+      }
+    </script>
+
+    <style>
+        .hidden {
+            display: none;
+        }
+
+        .unhidden {
+            display: block;
+        }
+
+        .preformatted {
+            border: 1px dashed #3c78b5;
+            font-size: 11px;
+            font-family: Courier;
+            margin: 10px;
+            line-height: 13px;
+        }
+
+        .preformattedHeader {
+            background-color: #f0f0f0;
+            border-bottom: 1px dashed #3c78b5;
+            padding: 3px;
+            text-align: center;
+        }
+
+        .preformattedContent {
+            background-color: #f0f0f0;
+            padding: 3px;
+        }
+    </style>
+</HEAD>
+<BODY>
+{% if errors_info | length %}
+    ERRORS: <BR>
+    {% for e in errors_info %}
+        <P><span COLOR=RED> {{ e }} </span></P>
+    {% endfor %}
+{% endif %}
+<P>Source files: {{ files|length }}</P>
+<P>Clones detected: {{ count_clones }}</P>
+<P>{{ lines_dup }} of {{ lines_ttl }} lines are duplicates
+    - {{ lines_perc }}% </P>
+<a href="javascript:unhide('files');">Details</a>
+<div id="files"
+     class="hidden"><P>
+    <B>Source files:</B><BR>{% for f in files %}{{ f }}<BR>{% endfor %}</P>
+    <B>Parameters<BR> </B>
+    {% for k,v in params.items() %}
+        {% if not k.startswith('__') %}
+            {{ k }} = {{ v }}<br>
+        {% endif %}
+    {% endfor %}
+</div>
+<P></P>
+{{ timings }}
+{{ marks_report }}
+{% for e in table %}
+    <P><B>Clone # {{ e.idx }}</B>
+        <BR>Distance between two fragments = {{ e.distance }}
+        <BR>Cloned piece size (lines) = {{ e.cloned_length }}
+    <TABLE NOWRAP WIDTH=100% BORDER=1>
+        <TR>
+            <TD>file {{ e.filenames[0] }}
+                <BR>at line {{ e.linenos[0] }}</TD>
+            <TD></TD>
+            <TD>file {{ e.filenames[1] }}
+                <BR>at line {{ e.linenos[1] }}</TD>
+        </TR>
+        {% for e1 in e.rows %}
+            <TR>
+                <TD>
+                    {{ e1[1] }}
+                </TD>
+                <TD style="width: 10px;"
+                        {% if e1[0] %}
+                    BGCOLOR='RED'
+                        {% else %}
+                    BGCOLOR='AQUA'
+                        {% endif %}
+                ></TD>
+                <TD>
+                    {{ e1[2] }}
+                </TD>
+            </TR>
+        {% endfor %}
+    </TABLE>
+{% endfor %}
+<HR>
+Clone Digger. GPL license.
+</BODY>
+</HTML>

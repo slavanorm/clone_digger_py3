@@ -1,540 +1,240 @@
-
 <HTML>
-    <HEAD>
-        <TITLE> CloneDigger Report </TITLE>
-        <script type="text/javascript">
-        function unhide(divID) {
-            var item = document.getElementById(divID);
-            if (item) {
-                item.className=(item.className=='hidden')?'unhidden':'hidden';
-            }
+<HEAD>
+    <TITLE> CloneDigger Report </TITLE>
+    <script type="text/javascript">
+      function unhide(divID) {
+        var item = document.getElementById(divID);
+        if (item) {
+          item.className = (
+            item.className == 'hidden') ? 'unhidden' : 'hidden';
         }
-</script>
+      }
+    </script>
 
-<style type="text/css">
-.hidden { display: none; }
-.unhidden { display: block; }
-.preformatted {
-        border: 1px dashed #3c78b5;
-    font-size: 11px;
-        font-family: Courier;
-    margin: 10px;
-        line-height: 13px;
-}
-.preformattedHeader {
-    background-color: #f0f0f0;
-        border-bottom: 1px dashed #3c78b5;
-    padding: 3px;
-        text-align: center;
-}
-.preformattedContent {
-    background-color: #f0f0f0;
-    padding: 3px;
-}
-<!--
-<div class="preformatted"><div class="preformattedContent">
-<pre>Clone Digger
-</pre>
-</div></div>
--->
+    <style>
+        .hidden {
+            display: none;
+        }
 
-</style>
+        .unhidden {
+            display: block;
+        }
 
-    </HEAD>
-    <BODY>
+        .preformatted {
+            border: 1px dashed #3c78b5;
+            font-size: 11px;
+            font-family: Courier;
+            margin: 10px;
+            line-height: 13px;
+        }
+
+        .preformattedHeader {
+            background-color: #f0f0f0;
+            border-bottom: 1px dashed #3c78b5;
+            padding: 3px;
+            text-align: center;
+        }
+
+        .preformattedContent {
+            background-color: #f0f0f0;
+            padding: 3px;
+        }
+    </style>
+</HEAD>
+<BODY>
+
+<P>Source files: 1</P>
+<P>Clones detected: 2</P>
+<P>16 of 28 lines are duplicates
+    - 57.14% </P>
+<a href="javascript:unhide('files');">Details</a>
+<div id="files"
+     class="hidden"><P>
+    <B>Source files:</B><BR>test_me.py<BR></P>
+    <B>Parameters<BR> </B>
     
-    
-    <P>Source files: 7</P>
-        <a href = "javascript:unhide('files');">Click here to show/hide file names</a><div id="files" class="hidden"><P><B>Source files:</B><BR>./test_me.py, <BR>./main.py, <BR>./global_settings.py, <BR>./backend/html_report.py, <BR>./backend/clone_detection_algorithm.py, <BR>./backend/classes.py, <BR>./backend/python3_related.py</P></div>
-        <P>Clones detected: 21</P>
-        <P>163 of 1598 lines are duplicates (10.20%) </P>
-<P>
-<B>Parameters<BR> </B>
-clustering_threshold = 10<BR>
-distance_threshold = 5<BR>
-size_threshold = 5<BR>
-hashing_depth = 1<BR>
-clusterize_using_hash = False<BR>
-clusterize_using_dcup = False<BR>
-</P> 
         
-    <B>Time elapsed</B><BR>Construction of AST : 0.09 seconds<BR>
-Building statement hash : 0.00 seconds<BR>
-Building patterns : 0.11 seconds<BR>
-Marking similar statements : 0.23 seconds<BR>
-Finding similar sequences of statements : 0.02 seconds<BR>
-Refining candidates : 0.12 seconds<BR>
- Total time: 0.58<BR>
- Started at: Thu Sep 16 14:45:33 2021<BR>
- Finished at: Thu Sep 16 14:45:34 2021
-    <P><B>Clone # 1</B><BR>Distance between two fragments = 0 <BR>Clone size = 12<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 48</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 195</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "It starts at %s:%d."                        % (                            first_statement.getSourceFile().getFileName(),                            min(                                first_statement.getCoveredLineNumbers()</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "Warning: sequence of statements starting at %s:%d"                                % (                                    first_statement.getSourceFile().getFileName(),                                    min(                                        first_statement.getCoveredLineNumbers()</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "It will be ignored. Use --force to override this restriction."</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "consists of many similar statements."</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "Please refer to http://clonedigger.sourceforge.net/documentation.html"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "It will be ignored. Use --force to override this restriction."</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "-----------------------------------------"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "Please refer to http://clonedigger.sourceforge.net/documentation.html"</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 2</B><BR>Distance between two fragments = 0 <BR>Clone size = 8<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./test_me.py"<BR>The first line is 28</TD><TD></TD><TD>Source file "./test_me.py"<BR>The first line is 17</TD></TR><TR>
-<TD>
-def test_3():    global y    if y:        assert 1 == 2    elif y == 2:        assert 6 == 5        assert 5 == 5    assert 2 is None</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-def test_2():    global x    if x:        assert 1 == 1    elif x == 2:        assert 6 == 1        assert 5 == 1    assert 2 is None</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 3</B><BR>Distance between two fragments = 4 <BR>Clone size = 8<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./global_settings.py"<BR>The first line is 2</TD><TD></TD><TD>Source file "./global_settings.py"<BR>The first line is 1</TD></TR><TR>
-<TD>
-hashing_depth = 1</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-clustering_threshold = 10</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_dcup = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-hashing_depth = 1</TD>
-</TR>
-<TR>
-<TD>
-report_unifiers = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-clusterize_using_dcup = False</TD>
-</TR>
-<TR>
-<TD>
-print_time = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-report_unifiers = False</TD>
-</TR>
-<TR>
-<TD>
-force = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-print_time = True</TD>
-</TR>
-<TR>
-<TD>
-use_diff = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-force = False</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_hash = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-use_diff = False</TD>
-</TR>
-<TR>
-<TD>
-free_variable_cost = 0.5</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clusterize_using_hash = False</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 4</B><BR>Distance between two fragments = 4 <BR>Clone size = 8<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./global_settings.py"<BR>The first line is 3</TD><TD></TD><TD>Source file "./global_settings.py"<BR>The first line is 1</TD></TR><TR>
-<TD>
-clusterize_using_dcup = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clustering_threshold = 10</TD>
-</TR>
-<TR>
-<TD>
-report_unifiers = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-hashing_depth = 1</TD>
-</TR>
-<TR>
-<TD>
-print_time = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clusterize_using_dcup = False</TD>
-</TR>
-<TR>
-<TD>
-force = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-report_unifiers = False</TD>
-</TR>
-<TR>
-<TD>
-use_diff = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-print_time = True</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_hash = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-force = False</TD>
-</TR>
-<TR>
-<TD>
-free_variable_cost = 0.5</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-use_diff = False</TD>
-</TR>
-<TR>
-<TD>
-verbose = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clusterize_using_hash = False</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 5</B><BR>Distance between two fragments = 0 <BR>Clone size = 7<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 138</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 99</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;processed_statements_count += 1</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;processed_statements_count += 1</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if global_settings.verbose and (                    (processed_statements_count % 1000) == 0                    print(                        "%d," % (processed_statements_count,),                        end=" ",                    sys.stdout.flush()</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if global_settings.verbose and (                    (processed_statements_count % 1000) == 0                    print(                        "%d," % (processed_statements_count,),                        end=" ",                    sys.stdout.flush()</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 6</B><BR>Distance between two fragments = 1 <BR>Clone size = 7<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/classes.py"<BR>The first line is 740</TD><TD></TD><TD>Source file "./backend/classes.py"<BR>The first line is 718</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;maxs = t.getBestMaxSubstrings(0)</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;maxs = t.getBestMaxSubstrings(3)</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;l = []</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;l = []</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (s1, s2) in maxs:            l.append(                [                    "".join([str(e) for e in s1]),                    "".join([str(e) for e in s2]),</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (s1, s2) in maxs:            l.append(                [                    "".join([str(e) for e in s1]),                    "".join([str(e) for e in s2]),</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 7</B><BR>Distance between two fragments = 0 <BR>Clone size = 7<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./test_me.py"<BR>The first line is 29</TD><TD></TD><TD>Source file "./test_me.py"<BR>The first line is 18</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;global y</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;global x</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;if y:        assert 1 == 2    elif y == 2:        assert 6 == 5        assert 5 == 5</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;if x:        assert 1 == 1    elif x == 2:        assert 6 == 1        assert 5 == 1</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;assert 2 is None</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;assert 2 is None</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 8</B><BR>Distance between two fragments = 3 <BR>Clone size = 9<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 191</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 40</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print()</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print()</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "-----------------------------------------"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "-----------------------------------------"</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "Warning: sequence of statements starting at %s:%d"                                % (                                    first_statement.getSourceFile().getFileName(),                                    min(                                        first_statement.getCoveredLineNumbers()</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "Warning: sequences of statements, consists of %d elements is too long."                        % (len(sequence),)</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 9</B><BR>Distance between two fragments = 0 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 207</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 57</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "It will be ignored. Use --force to override this restriction."</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "It will be ignored. Use --force to override this restriction."</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "Please refer to http://clonedigger.sourceforge.net/documentation.html"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "Please refer to http://clonedigger.sourceforge.net/documentation.html"</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "-----------------------------------------"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                        "-----------------------------------------"</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 10</B><BR>Distance between two fragments = 3 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/classes.py"<BR>The first line is 705</TD><TD></TD><TD>Source file "./backend/classes.py"<BR>The first line is 68</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;def __init__(self, code):            self._code = code</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def setMark(self, mark):        self._mark = mark</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;def getCode(self):            return self._code</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getMark(self):        return self._mark</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;def __str__(self):            return str(self._code)</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getCoveredLineNumbers(self):        return self._covered_line_numbers</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 11</B><BR>Distance between two fragments = 3 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/classes.py"<BR>The first line is 111</TD><TD></TD><TD>Source file "./backend/classes.py"<BR>The first line is 71</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getName(self):        return self._name</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getMark(self):        return self._mark</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getChilds(self):        return self._childs</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getCoveredLineNumbers(self):        return self._covered_line_numbers</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getChildCount(self):        return len(self._childs)</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getParent(self):        return self._parent</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 12</B><BR>Distance between two fragments = 0 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 207</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 204</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "It will be ignored. Use --force to override this restriction."</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "consists of many similar statements."</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "Please refer to http://clonedigger.sourceforge.net/documentation.html"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "It will be ignored. Use --force to override this restriction."</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "-----------------------------------------"</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;print(                                "Please refer to http://clonedigger.sourceforge.net/documentation.html"</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 13</B><BR>Distance between two fragments = 3 <BR>Clone size = 7<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 446</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 400</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;report.stopTimer()</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;report.stopTimer()</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;if global_settings.verbose:        print(            len(duplicate_candidates), " sequences were found"        print("Refining candidates...", end=" ")        sys.stdout.flush()</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if global_settings.verbose:            print(Cluster.count, "patterns were discovered")            print(                "Choosing pattern for each statement...",                end=" ",            sys.stdout.flush()</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 14</B><BR>Distance between two fragments = 4 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./global_settings.py"<BR>The first line is 4</TD><TD></TD><TD>Source file "./global_settings.py"<BR>The first line is 1</TD></TR><TR>
-<TD>
-report_unifiers = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clustering_threshold = 10</TD>
-</TR>
-<TR>
-<TD>
-print_time = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-hashing_depth = 1</TD>
-</TR>
-<TR>
-<TD>
-force = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-clusterize_using_dcup = False</TD>
-</TR>
-<TR>
-<TD>
-use_diff = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-report_unifiers = False</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_hash = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-print_time = True</TD>
-</TR>
-<TR>
-<TD>
-free_variable_cost = 0.5</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-force = False</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 15</B><BR>Distance between two fragments = 4 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./global_settings.py"<BR>The first line is 5</TD><TD></TD><TD>Source file "./global_settings.py"<BR>The first line is 1</TD></TR><TR>
-<TD>
-print_time = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clustering_threshold = 10</TD>
-</TR>
-<TR>
-<TD>
-force = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-hashing_depth = 1</TD>
-</TR>
-<TR>
-<TD>
-use_diff = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-clusterize_using_dcup = False</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_hash = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-report_unifiers = False</TD>
-</TR>
-<TR>
-<TD>
-free_variable_cost = 0.5</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-print_time = True</TD>
-</TR>
-<TR>
-<TD>
-verbose = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-force = False</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 16</B><BR>Distance between two fragments = 3 <BR>Clone size = 6<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./global_settings.py"<BR>The first line is 6</TD><TD></TD><TD>Source file "./global_settings.py"<BR>The first line is 1</TD></TR><TR>
-<TD>
-force = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clustering_threshold = 10</TD>
-</TR>
-<TR>
-<TD>
-use_diff = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-hashing_depth = 1</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_hash = False</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-clusterize_using_dcup = False</TD>
-</TR>
-<TR>
-<TD>
-free_variable_cost = 0.5</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-report_unifiers = False</TD>
-</TR>
-<TR>
-<TD>
-verbose = True</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-print_time = True</TD>
-</TR>
-<TR>
-<TD>
-free_variables_count = 1  # mb its wrong</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-force = False</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 17</B><BR>Distance between two fragments = 3 <BR>Clone size = 5<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/classes.py"<BR>The first line is 359</TD><TD></TD><TD>Source file "./backend/classes.py"<BR>The first line is 302</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getCoveredLineNumbersCount(self):        covered = set()        for t in self:            covered.update(t.getCoveredLineNumbers())        return len(covered)</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def getCoveredLineNumbers(self):        r = set()        for s in self:            r.update(s.getCoveredLineNumbers())        return r</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 18</B><BR>Distance between two fragments = 0 <BR>Clone size = 5<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 432</TD><TD></TD><TD>Source file "./backend/clone_detection_algorithm.py"<BR>The first line is 415</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;if global_settings.verbose:        print(            "Finding similar sequences of statements...",            end=" ",        sys.stdout.flush()</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if global_settings.verbose:            print(                "Building reverse hash for reporting ...",                end=" ",            sys.stdout.flush()</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 19</B><BR>Distance between two fragments = 3 <BR>Clone size = 5<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/classes.py"<BR>The first line is 10</TD><TD></TD><TD>Source file "./backend/html_report.py"<BR>The first line is 332</TD></TR><TR>
-<TD>
-class ParseError:    def __init__(self, descr):        self._descr = descr    def __str__(self):        return self._descr</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;class NewAsString:                                    def __init__(self, s):                                        self.s = highlight(s)                                    def __call__(self):                                        return self.s</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 20</B><BR>Distance between two fragments = 0 <BR>Clone size = 5<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./backend/html_report.py"<BR>The first line is 113</TD><TD></TD><TD>Source file "./backend/html_report.py"<BR>The first line is 47</TD></TR><TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def __init__(self):        Report.__init__(self)        self._mark_to_statement_hash = None</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def __init__(self):        Report.__init__(self)        self._mark_to_statement_hash = None</TD>
-</TR>
-<TR>
-<TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def setMarkToStatementHash(self, mark_to_statement_hash):        self._mark_to_statement_hash = mark_to_statement_hash</TD>
-<TD style="width: 10px;" BGCOLOR=AQUA> </TD><TD>
-&nbsp;&nbsp;&nbsp;&nbsp;def setMarkToStatementHash(self, mark_to_statement_hash):        self._mark_to_statement_hash = mark_to_statement_hash</TD>
-</TR>
-</TABLE> </P> <HR><BR>
-<P><B>Clone # 21</B><BR>Distance between two fragments = 4 <BR>Clone size = 5<TABLE NOWRAP WIDTH=100% BORDER=1><TD>Source file "./global_settings.py"<BR>The first line is 7</TD><TD></TD><TD>Source file "./global_settings.py"<BR>The first line is 1</TD></TR><TR>
-<TD>
-use_diff = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clustering_threshold = 10</TD>
-</TR>
-<TR>
-<TD>
-clusterize_using_hash = False</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-hashing_depth = 1</TD>
-</TR>
-<TR>
-<TD>
-free_variable_cost = 0.5</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-clusterize_using_dcup = False</TD>
-</TR>
-<TR>
-<TD>
-verbose = True</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-report_unifiers = False</TD>
-</TR>
-<TR>
-<TD>
-free_variables_count = 1  # mb its wrong</TD>
-<TD style="width: 10px;" BGCOLOR=RED> </TD><TD>
-print_time = True</TD>
-</TR>
-</TABLE> </P> <HR>
     
+        
     
-    <HR>
-    Clone Digger is aimed to find software clones in Python and Java programs. It is provided under the GPL license and can be downloaded from the site <a href="http://clonedigger.sourceforge.net">http://clonedigger.sourceforge.net</a>
-    </BODY>
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+            logging = <module 'logging' from '/usr/lib/python3.8/logging/__init__.py'><br>
+        
+    
+        
+            clustering_threshold = 10<br>
+        
+    
+        
+            hashing_depth = 1<br>
+        
+    
+        
+            clusterize_using_dcup = False<br>
+        
+    
+        
+            report_unifiers = False<br>
+        
+    
+        
+            print_time = False<br>
+        
+    
+        
+            force = False<br>
+        
+    
+        
+            clusterize_using_hash = False<br>
+        
+    
+        
+            free_variable_cost = 0.5<br>
+        
+    
+        
+            logger_level = 10<br>
+        
+    
+        
+            free_variables_count = 1<br>
+        
+    
+        
+            file_list = ['test_me.py']<br>
+        
+    
+        
+            no_recursion = False<br>
+        
+    
+        
+            output = output.html<br>
+        
+    
+        
+            distance_threshold = 5<br>
+        
+    
+        
+            size_threshold = 5<br>
+        
+    
+        
+            use_diff = False<br>
+        
+    
+        
+            ignore_dirs = []<br>
+        
+    
+        
+            f_prefixes = None<br>
+        
+    
+</div>
+<P></P>
+
+
+
+    <P><B>Clone # 0</B>
+        <BR>Distance between two fragments = 0
+        <BR>Cloned piece size (lines) = 8
+    <TABLE NOWRAP WIDTH=100% BORDER=1>
+        <TR>
+            <TD>file test_me.py
+                <BR>at line 26</TD>
+            <TD></TD>
+            <TD>file test_me.py
+                <BR>at line 15</TD>
+        </TR>
+        
+            <TR>
+                <TD>
+                    def test_3():    global y    if y:        assert 1 == 2    elif y == 2:        assert 6 == 5        assert 5 == 5    assert 2 is None
+                </TD>
+                <TD style="width: 10px;"
+                        
+                    BGCOLOR='AQUA'
+                        
+                ></TD>
+                <TD>
+                    def test_2():    global x    if x:        assert 1 == 1    elif x == 2:        assert 6 == 1        assert 5 == 1    assert 2 is None
+                </TD>
+            </TR>
+        
+    </TABLE>
+
+    <P><B>Clone # 1</B>
+        <BR>Distance between two fragments = 0
+        <BR>Cloned piece size (lines) = 7
+    <TABLE NOWRAP WIDTH=100% BORDER=1>
+        <TR>
+            <TD>file test_me.py
+                <BR>at line 27</TD>
+            <TD></TD>
+            <TD>file test_me.py
+                <BR>at line 16</TD>
+        </TR>
+        
+            <TR>
+                <TD>
+                        global y
+                </TD>
+                <TD style="width: 10px;"
+                        
+                    BGCOLOR='AQUA'
+                        
+                ></TD>
+                <TD>
+                        global x
+                </TD>
+            </TR>
+        
+            <TR>
+                <TD>
+                        if y:        assert 1 == 2    elif y == 2:        assert 6 == 5        assert 5 == 5
+                </TD>
+                <TD style="width: 10px;"
+                        
+                    BGCOLOR='AQUA'
+                        
+                ></TD>
+                <TD>
+                        if x:        assert 1 == 1    elif x == 2:        assert 6 == 1        assert 5 == 1
+                </TD>
+            </TR>
+        
+            <TR>
+                <TD>
+                        assert 2 is None
+                </TD>
+                <TD style="width: 10px;"
+                        
+                    BGCOLOR='AQUA'
+                        
+                ></TD>
+                <TD>
+                        assert 2 is None
+                </TD>
+            </TR>
+        
+    </TABLE>
+
+<HR>
+Clone Digger. GPL license.
+</BODY>
 </HTML>

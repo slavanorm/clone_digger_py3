@@ -1,18 +1,10 @@
-import global_settings
+import settings
 import ast
 import copy
 
-verbose = True
+# todo: move this to settings
 free_variables_count = 1
 free_variable_cost = 0.5
-
-
-class ParseError:
-    def __init__(self, descr):
-        self._descr = descr
-
-    def __str__(self):
-        return self._descr
 
 
 class SourceFile:
@@ -46,250 +38,6 @@ class SourceFile:
 
     def getFileName(self):
         return self._file_name
-
-
-class AbstractSyntaxTree:
-    def __init__(
-        self, name=None, line_numbers=[], source_file=None
-    ):
-        self._childs = []
-        self._line_numbers = line_numbers
-        self._covered_line_numbers = None
-        self._parent = None
-        self._hash = None
-        self._source_file = source_file
-        self._is_statement = False
-        self.ast_node = None
-        self._name = name or "AbstractSyntaxTree"
-
-    def getSourceFile(self):
-        return self._source_file
-
-    def setMark(self, mark):
-        self._mark = mark
-
-    def getMark(self):
-        return self._mark
-
-    def getCoveredLineNumbers(self):
-        return self._covered_line_numbers
-
-    def getParent(self):
-        return self._parent
-
-    def setParent(self, parent):
-        self._parent = parent
-
-    def getAncestors(self):
-        r = []
-        t = self.getParent()
-        while t:
-            if isinstance(t,ast.stmt):
-                r.append(t)
-            t = t.getParent()
-        return r
-
-    def getSourceLines(self):
-        source_line_numbers = set([])
-        r = []
-        source_line_numbers = self.getCoveredLineNumbers()
-        source_line_numbers_list = list(
-            range(
-                min(source_line_numbers),
-                max(source_line_numbers) + 1,
-            )
-        )
-        source_line_numbers_list.sort()
-        for source_line_number in source_line_numbers_list:
-            r.append(
-                self.getSourceFile().getSourceLine(
-                    source_line_number
-                )
-            )
-        return r
-
-    def getName(self):
-        return self._name
-
-    def getChilds(self):
-        return self._childs
-
-    def getChildCount(self):
-        return len(self._childs)
-
-    def propagateCoveredLineNumbers(self):
-        self._covered_line_numbers = set(self._line_numbers)
-        for child in self.getChilds():
-            self._covered_line_numbers.update(
-                child.propagateCoveredLineNumbers()
-            )
-        return self._covered_line_numbers
-
-    def propagateHeight(self):
-        if self.getChildCount() == 0:
-            self._height = 0
-        else:
-            self._height = (
-                max(
-                    [
-                        c.propagateHeight()
-                        for c in self.getChilds()
-                    ]
-                )
-                + 1
-            )
-        return self._height
-
-    def addChild(self, child, save_parent=False):
-        if not save_parent:
-            child.setParent(self)
-        self._childs.append(child)
-
-    def getFullHash(self):
-        # todo: try
-        return self.getDCupHash(-1)
-
-    def getDCupHash(self, level):
-        if len(self._childs) == 0:
-            ret = 0  # in case of names and constants
-        else:
-            ret = (
-                (level + 1)
-                * hash(self._name)
-                * len(self._childs)
-            )
-        # if level == -1, it will not stop until it reaches the leaves
-        if level != 0:
-            for i in range(len(self._childs)):
-                child = self._childs[i]
-                ret += (i + 1) * child.getDCupHash(level - 1)
-        return hash(ret)
-
-    def __hash__(self):
-        # TODO check correctness
-        if not self._hash:
-            self._hash = hash(
-                self.getDCupHash(3) + hash(self.getName())
-            )
-        #       return  hash(self.getDCupHash(3) + hash(self.getName()))
-
-        return self._hash
-
-    def __eq__(self, tree2):
-        tree1 = self
-        if type(tree2) == type(None):
-            return False
-        if tree1.getName() != tree2.getName():
-            return False
-        if tree1.getChildCount() != tree2.getChildCount():
-            return False
-        for i in range(tree1.getChildCount()):
-            if tree1.getChilds()[i] != tree2.getChilds()[i]:
-                return False
-        return True
-
-    def getStatementSequences(self):
-
-        not_empty = (
-            lambda x: (not x.isEmpty())
-            and len(x.getCoveredLineNumbers())
-            >= global_settings.size_threshold
-        )
-
-        r = []
-        current = StatementSequence(
-            source_file=self._source_file
-        )
-
-        if self._source_file is None:
-            v = 1
-
-        for child in self._childs:
-            if isinstance(child.ast_node, ast.stmt):
-                current.addStatement(child)
-            elif not_empty(current):
-                r += [current]
-                current = StatementSequence(
-                    source_file=self._source_file
-                )
-
-            # recursion here
-            r += child.getStatementSequences()
-
-        if not_empty(current):
-            r += [current]
-
-        return r
-
-    def storeSize(self):
-        observed = set()
-        self._none_count = 0
-
-        def rec_calc_size(t):
-            r = 0
-            if t not in observed:
-                if t.getChildCount():
-                    for c in t.getChilds():
-                        r += rec_calc_size(c)
-                else:
-                    observed.add(t)
-                    if t.getName() == "None":
-                        self._none_count += 1
-                    if t.__class__.__name__ == "FreeVariable":
-                        r += free_variable_cost
-                    else:
-                        r += 1
-            return r
-
-        self._size = rec_calc_size(self)
-
-    def getSize(self, ignore_none=True):
-        ret = self._size
-        if ignore_none:
-            ret -= self._none_count
-        return ret
-
-    def getTokenCount(self):
-        def rec_calc_size(t):
-            if t.getChildCount():
-                if t.getName() in [
-                    "Add",
-                    "Assign",
-                    "Sub",
-                    "Div",
-                    "Mul",
-                    "Mod",
-                    "Function",
-                    "If",
-                    "Class",
-                    "Raise",
-                ]:
-                    r = 1
-                else:
-                    r = 0
-                for c in t.getChilds():
-                    r += rec_calc_size(c)
-            else:
-                if (
-                    t.getName()[0] != "'"
-                    and t.getName() != "Pass"
-                ):
-                    return 0
-                else:
-                    return 1
-            return r
-
-        return rec_calc_size(self)
-
-    def as_string(self):
-        return "".join(
-            [
-                self._source_file._source_lines[e]
-                for e in sorted(
-                    list(self._covered_line_numbers)
-                )
-            ]
-        )
 
 
 class StatementSequence:
@@ -401,17 +149,6 @@ class PairSequences:
         )
 
 
-class FreeVariable(AbstractSyntaxTree):
-    free_variables_count = 1
-
-    def __init__(self):
-        global free_variables_count
-        FreeVariable.free_variables_count += 1
-        name = "VAR(%d)" % (FreeVariable.free_variables_count,)
-        #       self._childs = []
-        AbstractSyntaxTree.__init__(self, name)
-
-
 class Substitution:
     def __init__(self, initial_value=None):
         if not initial_value:
@@ -427,7 +164,7 @@ class Substitution:
             if without_copying:
                 return tree
             else:
-                r = AbstractSyntaxTree(tree.getName())
+                r = AbstractSyntaxTree(tree.name)
                 for child in tree.getChilds():
                     r.addChild(
                         self.substitute(child, without_copying)
@@ -442,7 +179,7 @@ class Substitution:
         for (u, tree) in list(self.getMap().items()):
             ret += (
                 tree.getSize(False)
-                - global_settings.free_variable_cost
+                - settings.free_variable_cost
             )
         return ret
 
@@ -595,7 +332,7 @@ class Unifier:
         def unify(node1, node2):
             if node1 == node2:
                 return node1, (Substitution(), Substitution())
-            elif (node1.getName() != node2.getName()) or (
+            elif (node1.name != node2.name) or (
                 node1.getChildCount() != node2.getChildCount()
             ):
                 var = FreeVariable()
@@ -608,7 +345,7 @@ class Unifier:
                 )
             else:
                 s = (Substitution(), Substitution())
-                name = node1.getName()
+                name = node1.name
                 retNode = AbstractSyntaxTree(name)
                 count = node1.getChildCount()
                 for i in range(count):
@@ -699,55 +436,251 @@ class Cluster:
         return self.getUnifierTree().getSize()
 
 
-if __name__ == "__main__":
+class AbstractSyntaxTree:
+    def __init__(
+        self, name=None, line_numbers=[], source_file=None
+    ):
+        self.childs = []
+        self._line_numbers = line_numbers
+        self._covered_line_numbers = None
+        self._parent = None
+        self._hash = None
+        self._source_file = source_file
+        self._is_statement = False
+        self.ast_node = None
+        self.name = name or "AbstractSyntaxTree"
 
-    class Elem:
-        def __init__(self, code):
-            self._code = code
+    def getSourceFile(self):
+        return self._source_file
 
-        def getCode(self):
-            return self._code
+    def setMark(self, mark):
+        self._mark = mark
 
-        def __str__(self):
-            return str(self._code)
+    def getMark(self):
+        return self._mark
 
-    def test1():
-        t = SuffixTree()
-        for w in ["abcPeter", "Pet1erbca", "Peter", "aPet0--"]:
-            t.add([Elem(c) for c in w])
-        maxs = t.getBestMaxSubstrings(3)
-        l = []
-        for (s1, s2) in maxs:
-            l.append(
-                [
-                    "".join([str(e) for e in s1]),
-                    "".join([str(e) for e in s2]),
-                ]
+    def getCoveredLineNumbers(self):
+        return self._covered_line_numbers
+
+    def getParent(self):
+        return self._parent
+
+    def setParent(self, parent):
+        self._parent = parent
+
+    def getAncestors(self):
+        r = []
+        t = self.getParent()
+        while t:
+            if isinstance(t,ast.stmt):
+                r.append(t)
+            t = t.getParent()
+        return r
+
+    def getSourceLines(self):
+        source_line_numbers = set([])
+        r = []
+        source_line_numbers = self.getCoveredLineNumbers()
+        source_line_numbers_list = list(
+            range(
+                min(source_line_numbers),
+                max(source_line_numbers) + 1,
             )
-        assert l == [
-            ["Pe1t", "P2et"],
-            ["P3et", "Pe4t"],
-            ["Pet", "Pet"],
-            ["Pet", "Pet"],
-            ["Pet", "Pet"],
-            ["Peter", "Peter"],
-        ]
-
-    def test2():
-        t = SuffixTree()
-        for w in ["a", "aa"]:
-            t.add([Elem(c) for c in w])
-        maxs = t.getBestMaxSubstrings(0)
-        l = []
-        for (s1, s2) in maxs:
-            l.append(
-                [
-                    "".join([str(e) for e in s1]),
-                    "".join([str(e) for e in s2]),
-                ]
+        )
+        source_line_numbers_list.sort()
+        for source_line_number in source_line_numbers_list:
+            r.append(
+                self.getSourceFile().getSourceLine(
+                    source_line_number
+                )
             )
-        assert l == [["a", "a"], ["a", "a"], ["a", "a"]]
+        return r
 
-    for s in dir():
-        if s.find("test") == 0:
-            eval(s + "()")
+    def getChilds(self):
+        return self.childs
+
+    def getChildCount(self):
+        return len(self.childs)
+
+    def propagateCoveredLineNumbers(self):
+        self._covered_line_numbers = set(self._line_numbers)
+        for child in self.getChilds():
+            self._covered_line_numbers.update(
+                child.propagateCoveredLineNumbers()
+            )
+        return self._covered_line_numbers
+
+    def propagateHeight(self):
+        if self.getChildCount() == 0:
+            self._height = 0
+        else:
+            self._height = (
+                max(
+                    [
+                        c.propagateHeight()
+                        for c in self.getChilds()
+                    ]
+                )
+                + 1
+            )
+        return self._height
+
+    def addChild(self, child, save_parent=False):
+        if not save_parent:
+            child.setParent(self)
+        self.childs.append(child)
+
+    def getFullHash(self):
+        # todo: check this
+        return self.getDCupHash(-1)
+
+    def getDCupHash(self, level):
+        if len(self.childs) == 0:
+            ret = 0  # in case of names and constants
+        else:
+            ret = (
+                (level + 1)
+                * hash(self.name)
+                * len(self.childs)
+            )
+        # if level == -1, it will not stop until it reaches the leaves
+        if level != 0:
+            for i in range(len(self.childs)):
+                child = self.childs[i]
+                ret += (i + 1) * child.getDCupHash(level - 1)
+        return hash(ret)
+
+    def __hash__(self):
+        # TODO check correctness
+        if not self._hash:
+            self._hash = hash(
+                self.getDCupHash(3) + hash(self.name)
+            )
+        #       return  hash(self.getDCupHash(3) + hash(self.getName()))
+
+        return self._hash
+
+    def __eq__(self, tree2):
+        tree1 = self
+        if type(tree2) == type(None):
+            return False
+        if tree1.name != tree2.name:
+            return False
+        if tree1.getChildCount() != tree2.getChildCount():
+            return False
+        for i in range(tree1.getChildCount()):
+            if tree1.getChilds()[i] != tree2.getChilds()[i]:
+                return False
+        return True
+
+    def getStatementSequences(self):
+
+        not_empty = (
+            lambda x: (not x.isEmpty())
+            and len(x.getCoveredLineNumbers())
+            >= settings.size_threshold
+        )
+
+        r = []
+        current = StatementSequence(
+            source_file=self._source_file
+        )
+
+        if self._source_file is None:
+            v = 1
+
+        for child in self.childs:
+            if isinstance(child.ast_node, ast.stmt):
+                current.addStatement(child)
+            elif not_empty(current):
+                r += [current]
+                current = StatementSequence(
+                    source_file=self._source_file
+                )
+
+            # recursion here
+            r += child.getStatementSequences()
+
+        if not_empty(current):
+            r += [current]
+
+        return r
+
+    def storeSize(self):
+        observed = set()
+        self._none_count = 0
+
+        def rec_calc_size(t):
+            r = 0
+            if t not in observed:
+                if t.getChildCount():
+                    for c in t.getChilds():
+                        r += rec_calc_size(c)
+                else:
+                    observed.add(t)
+                    if t.name == "None":
+                        self._none_count += 1
+                    if t.__class__.__name__ == "FreeVariable":
+                        r += free_variable_cost
+                    else:
+                        r += 1
+            return r
+
+        self._size = rec_calc_size(self)
+
+    def getSize(self, ignore_none=True):
+        ret = self._size
+        if ignore_none:
+            ret -= self._none_count
+        return ret
+
+    def getTokenCount(self):
+        def rec_calc_size(t):
+            if t.getChildCount():
+                if t.getName() in [
+                    "Add",
+                    "Assign",
+                    "Sub",
+                    "Div",
+                    "Mul",
+                    "Mod",
+                    "Function",
+                    "If",
+                    "Class",
+                    "Raise",
+                ]:
+                    r = 1
+                else:
+                    r = 0
+                for c in t.getChilds():
+                    r += rec_calc_size(c)
+            else:
+                if (
+                    t.getName()[0] != "'"
+                    and t.getName() != "Pass"
+                ):
+                    return 0
+                else:
+                    return 1
+            return r
+
+        return rec_calc_size(self)
+
+    def as_string(self):
+        return "".join(
+            [
+                self._source_file._source_lines[e]
+                for e in sorted(
+                    list(self._covered_line_numbers)
+                )
+            ]
+        )
+
+
+class FreeVariable(AbstractSyntaxTree):
+    def __init__(self):
+        global free_variables_count
+        free_variables_count += 1
+        name = "VAR(%d)" % (free_variables_count)
+        AbstractSyntaxTree.__init__(self, name)
+
