@@ -2,9 +2,8 @@ import settings
 import ast
 import copy
 
-# todo: move this to settings
-free_variables_count = 1
-free_variable_cost = 0.5
+free_variables_count = settings.free_variables_count
+free_variable_cost = settings.free_variable_cost
 
 
 class SourceFile:
@@ -30,10 +29,6 @@ class SourceFile:
         self._file_name = file_name
 
     def getSourceLine(self, n):
-        #       if n >= len(self._source_lines):
-        #           return ''
-        # TODO
-        # error here
         return self._source_lines[n]
 
     def getFileName(self):
@@ -153,11 +148,11 @@ class Substitution:
     def __init__(self, initial_value=None):
         if not initial_value:
             initial_value = {}
-        self._map = initial_value
+        self.map = initial_value
 
     def substitute(self, tree, without_copying=False):
-        if tree in list(self._map.keys()):
-            return self._map[tree]
+        if tree in list(self.map.keys()):
+            return self.map[tree]
         else:
             if isinstance(tree, FreeVariable):
                 return tree
@@ -171,12 +166,9 @@ class Substitution:
                     )
                 return r
 
-    def getMap(self):
-        return self._map
-
     def getSize(self):
         ret = 0
-        for (u, tree) in list(self.getMap().items()):
+        for u, tree in self.map.items():
             ret += (
                 tree.getSize(False)
                 - settings.free_variable_cost
@@ -299,31 +291,31 @@ class Unifier:
     def __init__(self, t1, t2, ignore_parametrization=False):
         def combineSubs(node, s, t):
             # s and t are 2-tuples
-            assert list(s[0].getMap().keys()) == list(
-                s[1].getMap().keys()
+            assert list(s[0].map) == list(
+                s[1].map
             )
-            assert list(t[0].getMap().keys()) == list(
-                t[1].getMap().keys()
+            assert list(t[0].map) == list(
+                t[1].map
             )
             newt = (copy.copy(t[0]), copy.copy(t[1]))
             relabel = {}
-            for si in list(s[0].getMap().keys()):
+            for si in s[0].map:
                 if not ignore_parametrization:
                     foundone = False
-                    for ti in list(t[0].getMap().keys()):
+                    for ti in t[0].map:
                         if (
-                            s[0].getMap()[si]
-                            == t[0].getMap()[ti]
+                            s[0].map[si]
+                            == t[0].map[ti]
                         ) and (
-                            s[1].getMap()[si]
-                            == t[1].getMap()[ti]
+                            s[1].map[si]
+                            == t[1].map[ti]
                         ):
                             relabel[si] = ti
                             foundone = True
                             break
-                if ignore_parametrization or not foundone:
-                    newt[0].getMap()[si] = s[0].getMap()[si]
-                    newt[1].getMap()[si] = s[1].getMap()[si]
+                if not foundone:
+                    newt[0].map[si] = s[0].map[si]
+                    newt[1].map[si] = s[1].map[si]
             return (
                 Substitution(relabel).substitute(node),
                 newt,
@@ -360,8 +352,8 @@ class Unifier:
         (self._unifier, self._substitutions) = unify(t1, t2)
         self._unifier.storeSize()
         for i in (0, 1):
-            for key in self._substitutions[i].getMap():
-                self._substitutions[i].getMap()[key].storeSize()
+            for v in self._substitutions[i].map.values():
+                v.storeSize()
 
     def getSubstitutions(self):
         return self._substitutions
@@ -388,6 +380,7 @@ class Cluster:
             )
         else:
             self._n = 0
+            self._unifier_tree = None
             self._trees = []
             self._max_covered_lines = 0
         Cluster.count += 1
@@ -531,7 +524,6 @@ class AbstractSyntaxTree:
         self.childs.append(child)
 
     def getFullHash(self):
-        # todo: check this
         return self.getDCupHash(-1)
 
     def getDCupHash(self, level):
@@ -551,12 +543,10 @@ class AbstractSyntaxTree:
         return hash(ret)
 
     def __hash__(self):
-        # TODO check correctness
         if not self._hash:
             self._hash = hash(
                 self.getDCupHash(3) + hash(self.name)
             )
-        #       return  hash(self.getDCupHash(3) + hash(self.getName()))
 
         return self._hash
 

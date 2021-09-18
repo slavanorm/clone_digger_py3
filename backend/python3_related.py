@@ -16,7 +16,7 @@ class NT(ast.NodeTransformer):
 
     def prepare_node(self, node):
         if isinstance(node, classes.AbstractSyntaxTree):
-            # todo: learn why it happens
+            # can do later: learn why it happens
             return node
         if not node:
             return classes.AbstractSyntaxTree(

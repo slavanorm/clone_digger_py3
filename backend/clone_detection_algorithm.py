@@ -7,59 +7,6 @@ import settings
 
 
 def main(source_files, report):
-    statement_sequences = []
-    statement_count = 0
-    sequences_lengths = []
-    for source_file in source_files:
-        sequences = source_file._tree.getStatementSequences()
-        statement_sequences += sequences
-        sequences_lengths += [len(s) for s in sequences]
-        statement_count += sum([len(s) for s in sequences])
-
-    if not sequences_lengths:
-        logger.error(
-            "Input is empty or the size of the input is below the size threshold"
-        )
-        sys.exit(0)
-
-    if logger.level <= logging.DEBUG:
-        n_sequences = len(sequences_lengths)
-        avg_seq_length = sum(sequences_lengths) / float(
-            n_sequences
-        )
-        max_seq_length = max(sequences_lengths)
-
-        logger.debug(["%d sequences" % (n_sequences,)])
-        logger.debug(
-            "average sequence length: %f" % (avg_seq_length,)
-        )
-        logger.debug(
-            "maximum sequence length: %d" % (max_seq_length,)
-        )
-        sequences_without_restriction = statement_sequences
-        sequences = []
-        if not settings.force:
-            for sequence in sequences_without_restriction:
-                if len(sequence) > 1000:
-                    first_statement = sequence[0]
-                    logger.warn(
-                        [
-                            "Warning: sequences of statements, consists of %d elements is too long."
-                            % len(sequence),
-                            "It starts at %s:%d."
-                            % (
-                                first_statement.getSourceFile().getFileName(),
-                                min(
-                                    first_statement.getCoveredLineNumbers()
-                                ),
-                            ),
-                            "It will be ignored. Use --force to override this "
-                            "restriction.",
-                        ]
-                    )
-                else:
-                    sequences.append(sequence)
-
     def calc_statement_sizes():
         for sequence in statement_sequences:
             for statement in sequence:
@@ -91,13 +38,10 @@ def main(source_files, report):
             statements = hash_to_statement[h]
             for statement in statements:
                 processed_statements_count += 1
-                if logger.level <= logging.DEBUG and (
-                    (processed_statements_count % 1000) == 0
-                ):
-                    logger.warn(
+                if (processed_statements_count % 1000) == 0:
+                    logging.DEBUG(
                         "%d," % (processed_statements_count,)
                     )
-                    sys.stdout.flush()
                 bestcluster = None
                 mincost = sys.maxsize
                 for cluster in local_clusters:
@@ -121,20 +65,16 @@ def main(source_files, report):
         return ret
 
     def clusterize(hash_to_statement, clusters_map):
-        processed_statements_count = 0
         # clusters_map contain hash values for statements, not unifiers
         # therefore it will work correct even if unifiers are smaller than hashing depth value
-        for h in list(hash_to_statement.keys()):
-            clusters = clusters_map[h]
-            for statement in hash_to_statement[h]:
-                processed_statements_count += 1
-                logger.debug(processed_statements_count)
+        for k,v in hash_to_statement.items():
+            clusters = clusters_map[k]
+            for statement in v:
                 mincost = sys.maxsize
                 for cluster in clusters:
                     new_u = Unifier(
                         cluster.getUnifierTree(), statement
                     )
-                    #                   assert(new_u.getSubstitutions()[0].getSize() == 0)
                     cost = new_u.getSize()
                     if cost < mincost:
                         mincost = cost
@@ -144,7 +84,6 @@ def main(source_files, report):
     def filterOutLongEquallyLabeledSequences(
         statement_sequences,
     ):
-        # TODO - refactor, combine with the previous warning
         sequences_without_restriction = statement_sequences
         statement_sequences = []
         for sequence in sequences_without_restriction:
@@ -259,10 +198,8 @@ def main(source_files, report):
                 return lr
 
             n = pair_sequences.getLength() + 1
-            while 1:
+            while n > 0:
                 n -= 1
-                if n == 0:
-                    break
                 new_pairs_sequences = (
                     all_pairsubsequences_size_n_threshold(n)
                 )
@@ -301,9 +238,6 @@ def main(source_files, report):
 
     def remove_dominated_clones(clones):
         ret_clones = []
-        #       def f_cmp(a, b):
-        #           return a.getLevel().__cmp__(b.getLevel())
-        #       clones.sort(f_cmp)
         statement_to_clone = {}
         for clone in clones:
             for sequence in clone:
@@ -334,6 +268,60 @@ def main(source_files, report):
                 ret_clones.append(clone)
         return ret_clones
 
+
+    statement_sequences = []
+    statement_count = 0
+    sequences_lengths = []
+    for source_file in source_files:
+        sequences = source_file._tree.getStatementSequences()
+        statement_sequences += sequences
+        sequences_lengths += [len(s) for s in sequences]
+        statement_count += sum([len(s) for s in sequences])
+
+    if not sequences_lengths:
+        logger.error(
+            "Input is empty or the size of the input is below the size threshold"
+        )
+        sys.exit(0)
+
+    if logger.level <= logging.DEBUG:
+        n_sequences = len(sequences_lengths)
+        avg_seq_length = sum(sequences_lengths) / float(
+            n_sequences
+        )
+        max_seq_length = max(sequences_lengths)
+
+        logger.debug(["%d sequences" % (n_sequences,)])
+        logger.debug(
+            "average sequence length: %f" % (avg_seq_length,)
+        )
+        logger.debug(
+            "maximum sequence length: %d" % (max_seq_length,)
+        )
+        sequences_without_restriction = statement_sequences
+        sequences = []
+        if not settings.force:
+            for sequence in sequences_without_restriction:
+                if len(sequence) > 1000:
+                    first_statement = sequence[0]
+                    logger.warn(
+                        [
+                            "Warning: sequences of statements, consists of %d elements is too long."
+                            % len(sequence),
+                            "It starts at %s:%d."
+                            % (
+                                first_statement.getSourceFile().getFileName(),
+                                min(
+                                    first_statement.getCoveredLineNumbers()
+                                ),
+                            ),
+                            "It will be ignored. Use --force to override this "
+                            "restriction.",
+                        ]
+                    )
+                else:
+                    sequences.append(sequence)
+
     logger.debug(
         [
             "Number of statements: ",
@@ -344,16 +332,11 @@ def main(source_files, report):
     calc_statement_sizes()
 
     logger.debug("Building statement hash...")
-
     report.startTimer("Building statement hash")
-    if settings.clusterize_using_hash:
-        hash_to_statement = build_hash_to_statement(
-            dcup_hash=False
-        )
-    else:
-        hash_to_statement = build_hash_to_statement(
-            dcup_hash=True
-        )
+
+    hash_to_statement = build_hash_to_statement(
+        dcup_hash=(not settings.clusterize_using_hash)
+    )
     report.stopTimer()
     logger.debug(
         [
@@ -396,7 +379,7 @@ def main(source_files, report):
                 if mark not in reverse_hash:
                     reverse_hash[mark] = []
                 reverse_hash[mark].append(statement)
-        report.setMarkToStatementHash(reverse_hash)
+        report.mark_to_statement_hash = reverse_hash
 
     logger.debug(
         "Finding similar sequences of statements...",
@@ -421,28 +404,24 @@ def main(source_files, report):
 
     if settings.distance_threshold != -1:
         report.startTimer("Refining candidates")
-        clones = refineDuplicates(duplicate_candidates)
+        duplicate_candidates = refineDuplicates(duplicate_candidates)
         report.stopTimer()
-    else:
-        clones = duplicate_candidates
 
-    logger.debug([len(clones), "clones were found"])
+    logger.debug([len(duplicate_candidates), "clones were found"])
     if settings.distance_threshold != -1:
-
         logger.debug("Removing dominated clones...")
 
-        old_clone_count = len(clones)
-        clones = remove_dominated_clones(clones)
-
+        old_clone_count = len(duplicate_candidates)
+        duplicate_candidates = remove_dominated_clones(duplicate_candidates)
         logger.debug(
             [
-                len(clones) - old_clone_count,
+                len(duplicate_candidates) - old_clone_count,
                 "clones were removed",
             ]
         )
 
     covered_source_lines = set()
-    for clone in clones:
+    for clone in duplicate_candidates:
         for sequence in clone:
             covered_source_lines = covered_source_lines.union(
                 sequence.getLineNumberHashables()
@@ -457,4 +436,4 @@ def main(source_files, report):
         covered_source_lines
     )
 
-    return clones
+    return duplicate_candidates

@@ -44,13 +44,13 @@
 <BODY>
 
 <P>Source files: 1</P>
-<P>Clones detected: 2</P>
-<P>16 of 28 lines are duplicates
-    - 57.14% </P>
+<P>Clones detected: 3</P>
+<P>17 of 72 lines are duplicates
+    - 23.61% </P>
 <a href="javascript:unhide('files');">Details</a>
 <div id="files"
      class="hidden"><P>
-    <B>Source files:</B><BR>test_me.py<BR></P>
+    <B>Source files:</B><BR>../wealth-pct-main-api/run_flask.py<BR></P>
     <B>Parameters<BR> </B>
     
         
@@ -82,7 +82,11 @@
         
     
         
-            clusterize_using_dcup = False<br>
+            clusterize_using_dcup = True<br>
+        
+    
+        
+            clusterize_using_hash = False<br>
         
     
         
@@ -98,7 +102,7 @@
         
     
         
-            clusterize_using_hash = False<br>
+            logger_level = 10<br>
         
     
         
@@ -106,15 +110,11 @@
         
     
         
-            logger_level = 10<br>
-        
-    
-        
             free_variables_count = 1<br>
         
     
         
-            file_list = ['test_me.py']<br>
+            file_list = ['../wealth-pct-main-api/run_flask.py']<br>
         
     
         
@@ -152,19 +152,19 @@
 
     <P><B>Clone # 0</B>
         <BR>Distance between two fragments = 0
-        <BR>Cloned piece size (lines) = 8
+        <BR>Cloned piece size (lines) = 6
     <TABLE NOWRAP WIDTH=100% BORDER=1>
         <TR>
-            <TD>file test_me.py
-                <BR>at line 26</TD>
+            <TD>file ../wealth-pct-main-api/run_flask.py
+                <BR>at line 74</TD>
             <TD></TD>
-            <TD>file test_me.py
-                <BR>at line 15</TD>
+            <TD>file ../wealth-pct-main-api/run_flask.py
+                <BR>at line 55</TD>
         </TR>
         
             <TR>
                 <TD>
-                    def test_3():    global y    if y:        assert 1 == 2    elif y == 2:        assert 6 == 5        assert 5 == 5    assert 2 is None
+                        keys_to_read = [        "cvar",        'pct_action',        'reward_measure',        'risk_measure'
                 </TD>
                 <TD style="width: 10px;"
                         
@@ -172,7 +172,21 @@
                         
                 ></TD>
                 <TD>
-                    def test_2():    global x    if x:        assert 1 == 1    elif x == 2:        assert 6 == 1        assert 5 == 1    assert 2 is None
+                        keys_to_read = [        "active_passive",        "time_horizon",        "ret_threshold",        "threshold_perc"
+                </TD>
+            </TR>
+        
+            <TR>
+                <TD>
+                        return parse_and_run(request, cms.main, dfs_to_read, keys_to_read)
+                </TD>
+                <TD style="width: 10px;"
+                        
+                    BGCOLOR='AQUA'
+                        
+                ></TD>
+                <TD>
+                        return parse_and_run(request, opt.main, dfs_to_read, keys_to_read)
                 </TD>
             </TR>
         
@@ -180,19 +194,19 @@
 
     <P><B>Clone # 1</B>
         <BR>Distance between two fragments = 0
-        <BR>Cloned piece size (lines) = 7
+        <BR>Cloned piece size (lines) = 5
     <TABLE NOWRAP WIDTH=100% BORDER=1>
         <TR>
-            <TD>file test_me.py
-                <BR>at line 27</TD>
+            <TD>file ../wealth-pct-main-api/run_flask.py
+                <BR>at line 68</TD>
             <TD></TD>
-            <TD>file test_me.py
-                <BR>at line 16</TD>
+            <TD>file ../wealth-pct-main-api/run_flask.py
+                <BR>at line 74</TD>
         </TR>
         
             <TR>
                 <TD>
-                        global y
+                        dfs_to_read = [        "allocation",        "min_max",        "mv_assump",        "cms_data",
                 </TD>
                 <TD style="width: 10px;"
                         
@@ -200,27 +214,27 @@
                         
                 ></TD>
                 <TD>
-                        global x
+                        keys_to_read = [        "cvar",        'pct_action',        'reward_measure',        'risk_measure'
                 </TD>
             </TR>
         
-            <TR>
-                <TD>
-                        if y:        assert 1 == 2    elif y == 2:        assert 6 == 5        assert 5 == 5
-                </TD>
-                <TD style="width: 10px;"
-                        
-                    BGCOLOR='AQUA'
-                        
-                ></TD>
-                <TD>
-                        if x:        assert 1 == 1    elif x == 2:        assert 6 == 1        assert 5 == 1
-                </TD>
-            </TR>
+    </TABLE>
+
+    <P><B>Clone # 2</B>
+        <BR>Distance between two fragments = 0
+        <BR>Cloned piece size (lines) = 5
+    <TABLE NOWRAP WIDTH=100% BORDER=1>
+        <TR>
+            <TD>file ../wealth-pct-main-api/run_flask.py
+                <BR>at line 68</TD>
+            <TD></TD>
+            <TD>file ../wealth-pct-main-api/run_flask.py
+                <BR>at line 55</TD>
+        </TR>
         
             <TR>
                 <TD>
-                        assert 2 is None
+                        dfs_to_read = [        "allocation",        "min_max",        "mv_assump",        "cms_data",
                 </TD>
                 <TD style="width: 10px;"
                         
@@ -228,7 +242,7 @@
                         
                 ></TD>
                 <TD>
-                        assert 2 is None
+                        keys_to_read = [        "active_passive",        "time_horizon",        "ret_threshold",        "threshold_perc"
                 </TD>
             </TR>
         

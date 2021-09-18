@@ -1,3 +1,4 @@
+import logging
 import time
 import difflib
 import re
@@ -14,6 +15,7 @@ class Report:
         self.clones = []
         self.timers = []
         self.file_names = []
+        self.mark_to_statement_hash = None
 
     def sort(self):
         # sortByCloneSize
@@ -28,48 +30,14 @@ class Report:
         self.timers[-1][1] = time.time() - self.timers[-1][1]
 
 class HTMLReport(Report):
-    def __init__(self):
-        super().__init__()
-        self.mark_to_statement_hash = None
 
     def writeReport(self, file_name):
-        def rec_correct_as_string(t1, t2, s1, s2):
-            def highlight(s):
-                return (
-                    '<span COLOR=RED">'
-                    + s
-                    + "</span>"
-                )
-
-            def set_as_string_node_parent(
-                t,
-            ):
-                if not isinstance(t, classes.AbstractSyntaxTree):
-                    t = t.getParent()
-                n = highlight(str(t.ast_node))
-                t.as_string = n
-
-            if (t1 in s1) or (t2 in s2):
-                for t in (t1, t2):
-                    set_as_string_node_parent(t)
-                return
-            assert len(t1.childs) == len(t2.childs)
-            for i in range(len(t1.childs)):
-                c1 = t1.getChilds()[i]
-                c2 = t2.getChilds()[i]
-                rec_correct_as_string(c1, c2, s1, s2)
-
         clone_descriptions =[]
         for idx, clone in enumerate(self.clones):
             rows = []
             for i in range(len(clone[0])):
                 statements = [clone[j][i] for j in [0, 1]]
                 u = classes.Unifier(*statements)
-                rec_correct_as_string(
-                    *statements,
-                    list(u.getSubstitutions()[0].getMap()),
-                    list(u.getSubstitutions()[1].getMap()),
-                )
                 rows += [[u.getSize() > 0,*[e.as_string() for e in statements]]]
             clone_descriptions += [dict(
                 idx=idx,
