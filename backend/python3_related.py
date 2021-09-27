@@ -114,7 +114,7 @@ class main(classes.SourceFile):
             ignored_statements=self.ignored_statements,
         )
 
-        with open(file_name) as f:
+        with open(file_name,encoding='utf-8', errors='ignore') as f:
             self._tree = nt.visit(
                 ast.parse(source=f.read())
             )

@@ -1,7 +1,7 @@
 import logging
 
 # todo: describe settings
-clustering_threshold = 10
+clustering_threshold = 30 # looks doesnt work
 hashing_depth = 1
 
 clusterize_using_dcup = True

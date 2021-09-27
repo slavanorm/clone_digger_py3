@@ -6,6 +6,7 @@ from backend import (
 import settings
 from backend.logging_related import logger
 
+import sys
 import os
 from argparse import ArgumentParser
 
@@ -24,6 +25,8 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
     source_files = []
 
     # region parse options
+    if len(sys.argv) > 1:
+        files_to_parse = []
 
     if isinstance(files_to_parse, str):
         files_to_parse = [files_to_parse]
@@ -228,3 +231,5 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
             os.remove(options.output)
         raise
 
+if __name__ == '__main__':
+    main()

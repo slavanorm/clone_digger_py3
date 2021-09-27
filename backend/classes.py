@@ -11,8 +11,10 @@ class SourceFile:
     distance_threshold = 5
 
     def __init__(self, file_name):
-        f = open(file_name, "r")
-
+        f = open(file_name, "r",
+                 encoding='utf-8',
+                 errors='ignore')
+        
         def filter_func(s):
             for i in range(len(s) - 1, -2, -1):
                 if i < 0 or not s[i].isspace():
