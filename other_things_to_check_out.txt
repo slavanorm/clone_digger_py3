@@ -1,0 +1,5 @@
+
+https://eli.thegreenplace.net/2018/unification/
+
+"An Efficient Unificaiton algorithm" by Martelli and Montanari
+"Unification: A Multidisciplinary survey" by Kevin Knight
