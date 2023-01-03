@@ -659,7 +659,7 @@ class AbstractSyntaxTree:
         return rec_calc_size(self)
 
     def as_string(self):
-        return "".join(
+        return "\n".join(
             [
                 self._source_file._source_lines[e]
                 for e in sorted(
