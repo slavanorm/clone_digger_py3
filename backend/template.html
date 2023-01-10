@@ -81,7 +81,7 @@
         {% for e1 in e.rows %}
             <TR>
                 <TD>
-                    {{ e1[1] }}
+                  <PRE>{{ e1[1] }}</PRE>
                 </TD>
                 <TD style="width: 10px;"
                         {% if e1[0] %}
@@ -91,7 +91,7 @@
                         {% endif %}
                 ></TD>
                 <TD>
-                    {{ e1[2] }}
+                  <PRE>{{ e1[2] }}</PRE>
                 </TD>
             </TR>
         {% endfor %}
