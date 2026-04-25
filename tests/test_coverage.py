@@ -1,11 +1,13 @@
 from clonedigger.main import main
 import os
 
-os.chdir('..')
+os.chdir("..")
+
 
 def test_1():
-    #main('tests/test_me.py')
+    # main('tests/test_me.py')
     # todo: why does it report a list?
-    main('../wealth-pct-main-api/run_flask.py')
+    main("../wealth-pct-main-api/run_flask.py")
+
 
 test_1()

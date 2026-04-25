@@ -14,10 +14,8 @@ class SourceFile:
     distance_threshold = 5
 
     def __init__(self, file_name: Path):
-        f = open(file_name, "r",
-                 encoding='utf-8',
-                 errors='ignore')
-        
+        f = open(file_name, "r", encoding="utf-8", errors="ignore")
+
         def filter_func(s):
             for i in range(len(s) - 1, -2, -1):
                 if i < 0 or not s[i].isspace():
@@ -27,9 +25,7 @@ class SourceFile:
             else:
                 return s
 
-        self._source_lines = [
-            filter_func(s) for s in f.readlines()
-        ]
+        self._source_lines = [filter_func(s) for s in f.readlines()]
         f.close()
         self._file_name = file_name
 
@@ -41,10 +37,12 @@ class SourceFile:
 
 
 class StatementSequence:
-    def __init__(self, sequence: list[AbstractSyntaxTree] = None, source_file: SourceFile = None):
+    def __init__(
+        self, sequence: list[AbstractSyntaxTree] = None, source_file: SourceFile = None
+    ):
         self._sequence = []
         self._source_file = source_file
-        for s in (sequence or []):
+        for s in sequence or []:
             self.addStatement(s)
 
     def getCoveredLineNumbers(self):
@@ -64,9 +62,7 @@ class StatementSequence:
         if not self._source_file:
             self._source_file = statement.getSourceFile()
         else:
-            assert (
-                self._source_file == statement.getSourceFile()
-            )
+            assert self._source_file == statement.getSourceFile()
 
     def __getitem__(self, *args):
         return self._sequence.__getitem__(*args)
@@ -75,12 +71,7 @@ class StatementSequence:
         return self._sequence.__len__()
 
     def getWeight(self):
-        return sum(
-            [
-                s.getCluster().getUnifierSize()
-                for s in self._sequence
-            ]
-        )
+        return sum([s.getCluster().getUnifierSize() for s in self._sequence])
 
     def getSourceFile(self):
         return self._source_file
@@ -88,12 +79,7 @@ class StatementSequence:
     def getLineNumberHashables(self):
         source_file_name = self._source_file.getFileName()
         line_numbers = self.getCoveredLineNumbers()
-        return set(
-            [
-                (source_file_name, line_number)
-                for line_number in line_numbers
-            ]
-        )
+        return set([(source_file_name, line_number) for line_number in line_numbers])
 
     def constructTree(self):
         tree = AbstractSyntaxTree("__SEQUENCE__")
@@ -131,12 +117,8 @@ class PairSequences:
     def subSequence(self, first: int, length: int):
         return PairSequences(
             [
-                StatementSequence(
-                    self[0][first : first + length]
-                ),
-                StatementSequence(
-                    self[1][first : first + length]
-                ),
+                StatementSequence(self[0][first : first + length]),
+                StatementSequence(self[1][first : first + length]),
             ]
         )
 
@@ -144,9 +126,7 @@ class PairSequences:
         return self[0].getLength()
 
     def getMaxCoveredLineNumbersCount(self):
-        return min(
-            [s.getCoveredLineNumbersCount() for s in self]
-        )
+        return min([s.getCoveredLineNumbersCount() for s in self])
 
 
 class Substitution:
@@ -166,18 +146,13 @@ class Substitution:
             else:
                 r = AbstractSyntaxTree(tree.name)
                 for child in tree.getChilds():
-                    r.addChild(
-                        self.substitute(child, without_copying)
-                    )
+                    r.addChild(self.substitute(child, without_copying))
                 return r
 
     def getSize(self):
         ret = 0
         for u, tree in self.map.items():
-            ret += (
-                tree.getSize(False)
-                - cfg.free_variable_cost
-            )
+            ret += tree.getSize(False) - cfg.free_variable_cost
         return ret
 
 
@@ -204,15 +179,11 @@ class SuffixTree:
         for pos in range(len(string)):
             e = string[pos]
             code = self._f_code(e)
-            node.string_positions.append(
-                self.StringPosition(string, pos, prevelem)
-            )
+            node.string_positions.append(self.StringPosition(string, pos, prevelem))
             if code not in node.childs:
                 node.childs[code] = self.SuffixTreeNode()
             node = node.childs[code]
-        node.ending_strings.append(
-            self.StringPosition(string, pos + 1, prevelem)
-        )
+        node.ending_strings.append(self.StringPosition(string, pos + 1, prevelem))
 
     def add(self, string: StatementSequence):
         for i in range(len(string)):
@@ -234,9 +205,7 @@ class SuffixTree:
 
         def check_left_diverse_and_add(s1, s2, p):
             if (
-                (not s1.prevelem)
-                or (not s2.prevelem)
-                or (s1.prevelem != s2.prevelem)
+                (not s1.prevelem) or (not s2.prevelem) or (s1.prevelem != s2.prevelem)
             ) and s1.position > p:
                 candidate = (
                     s1.string[: s1.position - p],
@@ -277,10 +246,8 @@ class SuffixTree:
                             node.childs[c2].string_positions
                             + node.childs[c2].ending_strings
                         ):
-                            check_left_diverse_and_add(
-                                s1, s2, 1
-                            )
-        for (code, child) in list(node.childs.items()):
+                            check_left_diverse_and_add(s1, s2, 1)
+        for code, child in list(node.childs.items()):
             r += self.getBestMaxSubstrings(
                 threshold - f(code),
                 f,
@@ -293,27 +260,24 @@ class SuffixTree:
 
 class Unifier:
     # Unifier is used instead of AntiUnifier
-    def __init__(self, t1: AbstractSyntaxTree, t2: AbstractSyntaxTree, ignore_parametrization: bool = False):
+    def __init__(
+        self,
+        t1: AbstractSyntaxTree,
+        t2: AbstractSyntaxTree,
+        ignore_parametrization: bool = False,
+    ):
         def combineSubs(node, s, t):
             # s and t are 2-tuples
-            assert list(s[0].map) == list(
-                s[1].map
-            )
-            assert list(t[0].map) == list(
-                t[1].map
-            )
+            assert list(s[0].map) == list(s[1].map)
+            assert list(t[0].map) == list(t[1].map)
             newt = (copy.copy(t[0]), copy.copy(t[1]))
             relabel = {}
             for si in s[0].map:
                 if not ignore_parametrization:
                     foundone = False
                     for ti in t[0].map:
-                        if (
-                            s[0].map[si]
-                            == t[0].map[ti]
-                        ) and (
-                            s[1].map[si]
-                            == t[1].map[ti]
+                        if (s[0].map[si] == t[0].map[ti]) and (
+                            s[1].map[si] == t[1].map[ti]
                         ):
                             relabel[si] = ti
                             foundone = True
@@ -367,9 +331,7 @@ class Unifier:
         return self._unifier
 
     def getSize(self):
-        return sum(
-            [s.getSize() for s in self.getSubstitutions()]
-        )
+        return sum([s.getSize() for s in self.getSubstitutions()])
 
 
 class Cluster:
@@ -380,9 +342,7 @@ class Cluster:
             self._n = 1
             self._unifier_tree = tree
             self._trees = [tree]
-            self._max_covered_lines = len(
-                tree.getCoveredLineNumbers()
-            )
+            self._max_covered_lines = len(tree.getCoveredLineNumbers())
         else:
             self._n = 0
             self._unifier_tree = None
@@ -400,16 +360,13 @@ class Cluster:
     def getAddCost(self, tree: AbstractSyntaxTree):
         unifier = Unifier(self.getUnifierTree(), tree)
         return (
-            self.getCount()
-            * unifier.getSubstitutions()[0].getSize()
+            self.getCount() * unifier.getSubstitutions()[0].getSize()
             + unifier.getSubstitutions()[1].getSize()
         )
 
     def unify(self, tree: AbstractSyntaxTree):
         self._n += 1
-        self._unifier_tree = Unifier(
-            self.getUnifierTree(), tree
-        ).getUnifier()
+        self._unifier_tree = Unifier(self.getUnifierTree(), tree).getUnifier()
         self._trees.append(tree)
 
     def eraseAllTrees(self):
@@ -419,13 +376,8 @@ class Cluster:
     def addWithoutUnification(self, tree: AbstractSyntaxTree):
         self._n += 1
         self._trees.append(tree)
-        if (
-            len(tree.getCoveredLineNumbers())
-            > self._max_covered_lines
-        ):
-            self._max_covered_lines = len(
-                tree.getCoveredLineNumbers()
-            )
+        if len(tree.getCoveredLineNumbers()) > self._max_covered_lines:
+            self._max_covered_lines = len(tree.getCoveredLineNumbers())
 
     def getMaxCoveredLines(self):
         return self._max_covered_lines
@@ -436,7 +388,10 @@ class Cluster:
 
 class AbstractSyntaxTree:
     def __init__(
-        self, name: str = None, line_numbers: list[int] = None, source_file: SourceFile = None
+        self,
+        name: str = None,
+        line_numbers: list[int] = None,
+        source_file: SourceFile = None,
     ):
         self.childs = []
         self._line_numbers = line_numbers or []
@@ -470,7 +425,7 @@ class AbstractSyntaxTree:
         r = []
         t = self.getParent()
         while t:
-            if isinstance(t,ast.stmt):
+            if isinstance(t, ast.stmt):
                 r.append(t)
             t = t.getParent()
         return r
@@ -487,11 +442,7 @@ class AbstractSyntaxTree:
         )
         source_line_numbers_list.sort()
         for source_line_number in source_line_numbers_list:
-            r.append(
-                self.getSourceFile().getSourceLine(
-                    source_line_number
-                )
-            )
+            r.append(self.getSourceFile().getSourceLine(source_line_number))
         return r
 
     def getChilds(self):
@@ -503,24 +454,14 @@ class AbstractSyntaxTree:
     def propagateCoveredLineNumbers(self):
         self._covered_line_numbers = set(self._line_numbers)
         for child in self.getChilds():
-            self._covered_line_numbers.update(
-                child.propagateCoveredLineNumbers()
-            )
+            self._covered_line_numbers.update(child.propagateCoveredLineNumbers())
         return self._covered_line_numbers
 
     def propagateHeight(self):
         if self.getChildCount() == 0:
             self._height = 0
         else:
-            self._height = (
-                max(
-                    [
-                        c.propagateHeight()
-                        for c in self.getChilds()
-                    ]
-                )
-                + 1
-            )
+            self._height = max([c.propagateHeight() for c in self.getChilds()]) + 1
         return self._height
 
     def addChild(self, child: AbstractSyntaxTree, save_parent: bool = False):
@@ -535,11 +476,7 @@ class AbstractSyntaxTree:
         if len(self.childs) == 0:
             ret = 0  # in case of names and constants
         else:
-            ret = (
-                (level + 1)
-                * hash(self.name)
-                * len(self.childs)
-            )
+            ret = (level + 1) * hash(self.name) * len(self.childs)
         # if level == -1, it will not stop until it reaches the leaves
         if level != 0:
             for i in range(len(self.childs)):
@@ -549,9 +486,7 @@ class AbstractSyntaxTree:
 
     def __hash__(self):
         if not self._hash:
-            self._hash = hash(
-                self.getDCupHash(3) + hash(self.name)
-            )
+            self._hash = hash(self.getDCupHash(3) + hash(self.name))
 
         return self._hash
 
@@ -570,16 +505,12 @@ class AbstractSyntaxTree:
 
     def getStatementSequences(self):
 
-        not_empty = (
-            lambda x: (not x.isEmpty())
-            and len(x.getCoveredLineNumbers())
-            >= cfg.size_threshold
+        not_empty = lambda x: (
+            (not x.isEmpty()) and len(x.getCoveredLineNumbers()) >= cfg.size_threshold
         )
 
         r = []
-        current = StatementSequence(
-            source_file=self._source_file
-        )
+        current = StatementSequence(source_file=self._source_file)
 
         if self._source_file is None:
             v = 1
@@ -589,9 +520,7 @@ class AbstractSyntaxTree:
                 current.addStatement(child)
             elif not_empty(current):
                 r += [current]
-                current = StatementSequence(
-                    source_file=self._source_file
-                )
+                current = StatementSequence(source_file=self._source_file)
 
             # recursion here
             r += child.getStatementSequences()
@@ -650,10 +579,7 @@ class AbstractSyntaxTree:
                 for c in t.getChilds():
                     r += rec_calc_size(c)
             else:
-                if (
-                    t.getName()[0] != "'"
-                    and t.getName() != "Pass"
-                ):
+                if t.getName()[0] != "'" and t.getName() != "Pass":
                     return 0
                 else:
                     return 1
@@ -665,9 +591,7 @@ class AbstractSyntaxTree:
         return "\n".join(
             [
                 self._source_file._source_lines[e]
-                for e in sorted(
-                    list(self._covered_line_numbers)
-                )
+                for e in sorted(list(self._covered_line_numbers))
             ]
         )
 
@@ -678,4 +602,3 @@ class FreeVariable(AbstractSyntaxTree):
         free_variables_count += 1
         name = "VAR(%d)" % (free_variables_count)
         AbstractSyntaxTree.__init__(self, name)
-

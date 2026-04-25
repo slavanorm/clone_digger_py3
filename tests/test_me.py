@@ -1,11 +1,15 @@
-def complex_thang(*args): pass
+def complex_thang(*args):
+    pass
+
 
 x = 1
 y = 2
 
-def test_complex_thang(q=1,w=2):
+
+def test_complex_thang(q=1, w=2):
     assert complex_thang(1) == 1
     assert complex_thang(6) == 1
+
 
 def test_complex_thang(q=1, w=2):
     assert complex_thang(5) == 1

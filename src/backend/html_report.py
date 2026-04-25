@@ -16,9 +16,7 @@ class Report:
 
     def sort(self):
         # sortByCloneSize
-        self.clones.sort(
-            key=lambda x: -x.getMaxCoveredLineNumbersCount()
-        )
+        self.clones.sort(key=lambda x: -x.getMaxCoveredLineNumbersCount())
 
     def startTimer(self, descr: str):
         self.timers.append([descr, time.time(), time.ctime()])
@@ -26,23 +24,28 @@ class Report:
     def stopTimer(self, descr: str = ""):
         self.timers[-1][1] = time.time() - self.timers[-1][1]
 
-class HTMLReport(Report):
 
+class HTMLReport(Report):
     def writeReport(self, file_name: Path):
-        clone_descriptions =[]
+        table = []
         for idx, clone in enumerate(self.clones):
             rows = []
             for i in range(len(clone[0])):
                 statements = [clone[j][i] for j in [0, 1]]
                 u = classes.Unifier(*statements)
-                rows += [[u.getSize() > 0,*[e.as_string() for e in statements]]]
-            clone_descriptions += [dict(
-                idx=idx,
-                distance=clone.calcDistance(),
-                cloned_length=max(len(set(e.getCoveredLineNumbers())) for e in clone),
-                filenames=[e._source_file._file_name for e in clone],
-                linenos=[min(e[0].getCoveredLineNumbers()) + 1 for e in clone],
-                rows=rows)]
+                rows += [[u.getSize() > 0, *[e.as_string() for e in statements]]]
+            table += [
+                dict(
+                    idx=idx,
+                    distance=clone.calcDistance(),
+                    cloned_length=max(
+                        len(set(e.getCoveredLineNumbers())) for e in clone
+                    ),
+                    filenames=[e._source_file._file_name for e in clone],
+                    linenos=[min(e[0].getCoveredLineNumbers()) + 1 for e in clone],
+                    rows=rows,
+                )
+            ]
 
         lines_dup = self.covered_source_lines_count
         lines_ttl = self.all_source_lines_count
@@ -58,30 +61,23 @@ class HTMLReport(Report):
             errors_info=self.error_info,
             timings="",
             marks_report="",
-            table=clone_descriptions
+            table=table,
         )
 
         if cfg.print_time:
             timings = ""
             timings += "<B>Time elapsed</B><BR>"
             timings += "<BR>\n".join(
-                [
-                    "%s : %.2f seconds" % (i[0], i[1])
-                    for i in self.timers
-                ]
+                ["%s : %.2f seconds" % (i[0], i[1]) for i in self.timers]
             )
-            timings += "<BR>\n Total time: %.2f" % (
-                self.getTotalTime()
-            )
+            timings += "<BR>\n Total time: %.2f" % (self.getTotalTime())
             timings += "<BR>\n Started at: " + self.timers[0][2]
             timings += "<BR>\n Finished at: " + self.timers[-1][2]
             result["timings"] = timings
         if self.mark_to_statement_hash:
             marks_report = "<P>Top 20 statement marks:"
             marks = list(self.mark_to_statement_hash)
-            marks.sort(
-                key=lambda x: -len(self.mark_to_statement_hash[x])
-            )
+            marks.sort(key=lambda x: -len(self.mark_to_statement_hash[x]))
             counter = 0
             for mark in marks[:20]:
                 counter += 1
@@ -93,9 +89,7 @@ class HTMLReport(Report):
                     + "<a href=\"javascript:unhide('stmt%d');\">show/hide representatives</a> "
                     % counter
                 )
-                marks_report += (
-                    '<div id="stmt%d" class="hidden"> <BR>' % counter
-                )
+                marks_report += '<div id="stmt%d" class="hidden"> <BR>' % counter
                 for statement in self.mark_to_statement_hash[mark]:
                     marks_report += str(statement) + "<BR>"
                 marks_report += "</div>"
@@ -103,7 +97,7 @@ class HTMLReport(Report):
             result["marks_report"] = marks_report
 
         with open(Path(__file__).parent / "template.html") as f:
-            HTML_base = Template(f.read())
-        HTML_code = HTML_base.render(**result)
+            template = Template(f.read())
+        html = template.render(**result)
         with open(file_name, "w") as f:
-            f.write(HTML_code)
+            f.write(html)

@@ -24,9 +24,7 @@ def main(source_files: list, report):
             for statement in statement_sequence:
                 if dcup_hash:
                     # 3 - CONSTANT HERE!
-                    h = statement.getDCupHash(
-                        cfg.hashing_depth
-                    )
+                    h = statement.getDCupHash(cfg.hashing_depth)
                 else:
                     h = statement.getFullHash()
                 if h not in hash_to_statement:
@@ -55,9 +53,7 @@ def main(source_files: list, report):
                         bestcluster = cluster
                 assert local_clusters == [] or bestcluster
                 assert mincost >= 0
-                if (
-                    not bestcluster
-                ) or mincost > cfg.clustering_threshold:
+                if (not bestcluster) or mincost > cfg.clustering_threshold:
                     newcluster = Cluster(statement)
                     local_clusters.append(newcluster)
                 else:
@@ -69,15 +65,13 @@ def main(source_files: list, report):
     def clusterize(hash_to_statement, clusters_map):
         # clusters_map contain hash values for statements, not unifiers
         # therefore it will work correct even if unifiers are smaller than hashing depth value
-        for k,v in hash_to_statement.items():
+        for k, v in hash_to_statement.items():
             clusters = clusters_map[k]
             for statement in v:
                 mincost = sys.maxsize
                 for cluster in clusters:
-                    new_u = Unifier(
-                        cluster.getUnifierTree(), statement
-                    )
-                    cost = new_u.getSize()
+                    unifier = Unifier(cluster.getUnifierTree(), statement)
+                    cost = unifier.getSize()
                     if cost < mincost:
                         mincost = cost
                         statement.setMark(cluster)
@@ -107,13 +101,9 @@ def main(source_files: list, report):
                     if length > 10:
                         new_sequence[i] = None
                         if not flag:
-                            for i in range(
-                                first_statement_index, i
-                            ):
+                            for i in range(first_statement_index, i):
                                 new_sequence[i] = None
-                            first_statement = sequence[
-                                first_statement_index
-                            ]
+                            first_statement = sequence[first_statement_index]
                             logger.warning(
                                 f"Warning: sequence of statements starting at "
                                 f"{first_statement.getSourceFile().getFileName()}:"
@@ -147,21 +137,17 @@ def main(source_files: list, report):
             return x.getMaxCoveredLines()
 
         def f_elem(x):
-            return StatementSequence(
-                x
-            ).getCoveredLineNumbersCount()
+            return StatementSequence(x).getCoveredLineNumbersCount()
 
-        def fcode(x):
+        def f_code(x):
             return x.getMark()
 
         f = f_size
-        suffix_tree_instance = SuffixTree(fcode)
+        suffix_tree_instance = SuffixTree(f_code)
         for sequence in statement_sequences:
             suffix_tree_instance.add(sequence)
         return [
-            PairSequences(
-                [StatementSequence(s1), StatementSequence(s2)]
-            )
+            PairSequences([StatementSequence(s1), StatementSequence(s2)])
             for (
                 s1,
                 s2,
@@ -178,15 +164,9 @@ def main(source_files: list, report):
 
             def all_pairsubsequences_size_n_threshold(n):
                 lr = []
-                for first in range(
-                    0, pair_sequences.getLength() - n + 1
-                ):
-                    new_pair_sequences = (
-                        pair_sequences.subSequence(first, n)
-                    )
-                    size = (
-                        new_pair_sequences.getMaxCoveredLineNumbersCount()
-                    )
+                for first in range(0, pair_sequences.getLength() - n + 1):
+                    new_pair_sequences = pair_sequences.subSequence(first, n)
+                    size = new_pair_sequences.getMaxCoveredLineNumbersCount()
                     if size >= cfg.size_threshold:
                         lr.append((new_pair_sequences, first))
                 return lr
@@ -194,9 +174,7 @@ def main(source_files: list, report):
             n = pair_sequences.getLength() + 1
             while n > 0:
                 n -= 1
-                new_pairs_sequences = (
-                    all_pairsubsequences_size_n_threshold(n)
-                )
+                new_pairs_sequences = all_pairsubsequences_size_n_threshold(n)
                 for (
                     candidate_sequence,
                     first,
@@ -206,20 +184,13 @@ def main(source_files: list, report):
                         r.append(candidate_sequence)
                         if first > 0:
                             pairs_sequences.append(
-                                pair_sequences.subSequence(
-                                    0, first - 1
-                                )
+                                pair_sequences.subSequence(0, first - 1)
                             )
-                        if (
-                            first + n
-                            < pair_sequences.getLength()
-                        ):
+                        if first + n < pair_sequences.getLength():
                             pairs_sequences.append(
                                 pair_sequences.subSequence(
                                     first + n,
-                                    pair_sequences.getLength()
-                                    - first
-                                    - n,
+                                    pair_sequences.getLength() - first - n,
                                 )
                             )
                         n += 1
@@ -262,7 +233,6 @@ def main(source_files: list, report):
                 ret_clones.append(clone)
         return ret_clones
 
-
     statement_sequences = []
     statement_count = 0
     sequences_lengths = []
@@ -280,18 +250,12 @@ def main(source_files: list, report):
 
     if logger.level <= logging.DEBUG:
         n_sequences = len(sequences_lengths)
-        avg_seq_length = sum(sequences_lengths) / float(
-            n_sequences
-        )
+        avg_seq_length = sum(sequences_lengths) / float(n_sequences)
         max_seq_length = max(sequences_lengths)
 
         logger.debug(f"{n_sequences} sequences")
-        logger.debug(
-            "average sequence length: %f" % (avg_seq_length,)
-        )
-        logger.debug(
-            "maximum sequence length: %d" % (max_seq_length,)
-        )
+        logger.debug("average sequence length: %f" % (avg_seq_length,))
+        logger.debug("maximum sequence length: %d" % (max_seq_length,))
         sequences_without_restriction = statement_sequences
         sequences = []
         if not cfg.force:
@@ -307,7 +271,9 @@ def main(source_files: list, report):
                 else:
                     sequences.append(sequence)
 
-    logger.debug(f"Number of statements: {statement_count}. Calculating size for each statement...")
+    logger.debug(
+        f"Number of statements: {statement_count}. Calculating size for each statement..."
+    )
     calc_statement_sizes()
 
     logger.debug("Building statement hash...")
@@ -319,20 +285,17 @@ def main(source_files: list, report):
     report.stopTimer()
     logger.debug(f"Number of different hash values: {len(hash_to_statement)}")
 
-    if (
-        cfg.clusterize_using_dcup
-        or cfg.clusterize_using_hash
-    ):
-        logger.debug(
-            "Marking each statement with its hash value"
-        )
+    if cfg.clusterize_using_dcup or cfg.clusterize_using_hash:
+        logger.debug("Marking each statement with its hash value")
         mark_using_hash(hash_to_statement)
     else:
         logger.debug("Building patterns...")
         report.startTimer("Building patterns")
         clusters_map = build_unifiers(hash_to_statement)
         report.stopTimer()
-        logger.debug(f"{Cluster.count} patterns were discovered. Choosing pattern for each statement...")
+        logger.debug(
+            f"{Cluster.count} patterns were discovered. Choosing pattern for each statement..."
+        )
 
         report.startTimer("Marking similar statements")
         clusterize(hash_to_statement, clusters_map)
@@ -353,16 +316,14 @@ def main(source_files: list, report):
         "Finding similar sequences of statements...",
     )
     if not cfg.force:
-        statement_sequences = (
-            filterOutLongEquallyLabeledSequences(
-                statement_sequences
-            )
-        )
+        statement_sequences = filterOutLongEquallyLabeledSequences(statement_sequences)
 
     report.startTimer("Finding similar sequences of statements")
     duplicate_candidates = findHugeSequences()
     report.stopTimer()
-    logger.debug(f"{len(duplicate_candidates)} sequences were found. Refining candidates...")
+    logger.debug(
+        f"{len(duplicate_candidates)} sequences were found. Refining candidates..."
+    )
 
     if cfg.distance_threshold != -1:
         report.startTimer("Refining candidates")
@@ -375,7 +336,9 @@ def main(source_files: list, report):
 
         old_clone_count = len(duplicate_candidates)
         duplicate_candidates = remove_dominated_clones(duplicate_candidates)
-        logger.debug(f"{len(duplicate_candidates) - old_clone_count} clones were removed")
+        logger.debug(
+            f"{len(duplicate_candidates) - old_clone_count} clones were removed"
+        )
 
     covered_source_lines = set()
     for clone in duplicate_candidates:
@@ -385,12 +348,8 @@ def main(source_files: list, report):
             )
     source_lines = set()
     for sequence in statement_sequences:
-        source_lines = source_lines.union(
-            sequence.getLineNumberHashables()
-        )
+        source_lines = source_lines.union(sequence.getLineNumberHashables())
     report.all_source_lines_count = len(source_lines)
-    report.covered_source_lines_count = len(
-        covered_source_lines
-    )
+    report.covered_source_lines_count = len(covered_source_lines)
 
     return duplicate_candidates

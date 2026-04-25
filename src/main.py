@@ -1,5 +1,5 @@
 from clonedigger.backend import (
-    python3_related,
+    ast_wrapper,
     html_report,
     clone_detection_algorithm,
 )
@@ -14,13 +14,13 @@ from argparse import ArgumentParser
 def main(fps: list[Path] = "tests/test_me.py"):
     def parse_file(file_name, func_prefixes):
         logger.info(f"Parsing {file_name}...")
-        source_file = supplier(file_name, func_prefixes)
+        source_file = wrapper(file_name, func_prefixes)
         source_file._tree.propagateCoveredLineNumbers()
         source_file._tree.propagateHeight()
         source_files.append(source_file)
         report.file_names += [file_name]
 
-    supplier = python3_related.main
+    wrapper = ast_wrapper.main
     report = html_report.HTMLReport()
     source_files = []
 
@@ -161,18 +161,18 @@ def main(fps: list[Path] = "tests/test_me.py"):
     if isinstance(options.file_list, str):
         options.file_list = [options.file_list]
     if options.f_prefixes:
-        func_prefixes = [
-            x.strip() for x in options.f_prefixes.split(",")
-        ]
+        func_prefixes = [x.strip() for x in options.f_prefixes.split(",")]
     else:
         func_prefixes = []
 
     if options.output is None:
         options.output = "output.html"
 
-    overrides = {k: getattr(options, k) for k, _ in cfg if getattr(options, k, None) is not None}
-    overrides.setdefault("distance_threshold", supplier.distance_threshold)
-    overrides.setdefault("size_threshold", supplier.size_threshold)
+    overrides = {
+        k: getattr(options, k) for k, _ in cfg if getattr(options, k, None) is not None
+    }
+    overrides.setdefault("distance_threshold", wrapper.distance_threshold)
+    overrides.setdefault("size_threshold", wrapper.size_threshold)
     cfg.__dict__.update(overrides)
 
     # endregion
@@ -186,23 +186,21 @@ def main(fps: list[Path] = "tests/test_me.py"):
                 fps += list(fp.iterdir())
             else:
                 fps += [
-                    e for e in fp.rglob("*")
-                    if e.is_file()
-                    and e.parent.name not in (options.ignore_dirs or [])
+                    e
+                    for e in fp.rglob("*")
+                    if e.is_file() and e.parent.name not in (options.ignore_dirs or [])
                 ]
         else:
             fps.append(fp)
-    fps = [e for e in fps if e.suffix == f".{supplier.extension}"]
+    fps = [e for e in fps if e.suffix == f".{wrapper.extension}"]
     # endregion
 
     report.startTimer("Construction of AST")
-    for fp in fps:
-        parse_file(fp, func_prefixes)
+    for file_name in fps:
+        parse_file(file_name, func_prefixes)
     report.stopTimer()
 
-    report.clones = clone_detection_algorithm.main(
-        source_files, report
-    )
+    report.clones = clone_detection_algorithm.main(source_files, report)
 
     report.sort()
     try:
@@ -213,4 +211,3 @@ def main(fps: list[Path] = "tests/test_me.py"):
         if output.exists():
             output.unlink()
         raise
-

@@ -4,13 +4,7 @@ from . import classes
 
 
 class NT(ast.NodeTransformer):
-    def __init__(
-        self,
-        *args,
-        source_file,
-        ignored_statements=None,
-        **kwargs
-    ):
+    def __init__(self, *args, source_file, ignored_statements=None, **kwargs):
         self._source_file = source_file
         self.ignored_statements = ignored_statements
         super().__init__(*args, **kwargs)
@@ -20,18 +14,14 @@ class NT(ast.NodeTransformer):
             # can do later: learn why it happens
             return node
         if not node:
-            return classes.AbstractSyntaxTree(
-                "None", source_file=self._source_file
-            )
+            return classes.AbstractSyntaxTree("None", source_file=self._source_file)
 
         # set lines
         name = node.__class__.__name__
-        lines = []
+        line_numbers = []
         if isinstance(node, ast.AST):
             if name in self.ignored_statements:
-                return classes.AbstractSyntaxTree(
-                    "None", source_file=self._source_file
-                )
+                return classes.AbstractSyntaxTree("None", source_file=self._source_file)
             """
             if name in ["FunctionDef", "Class"]:
                 # can have ignorelist
@@ -45,11 +35,11 @@ class NT(ast.NodeTransformer):
                         )
             """
             if "lineno" in node._attributes:
-                lines = [node.lineno - 1]
+                line_numbers = [node.lineno - 1]
 
         node_prepared = classes.AbstractSyntaxTree(
             name=name,
-            line_numbers=lines,
+            line_numbers=line_numbers,
             source_file=self._source_file,
         )
         node_prepared.ast_node = node
@@ -65,13 +55,9 @@ class NT(ast.NodeTransformer):
 
         ignorelist = ["None"]  # cant be Module
 
-        node = self.prepare_node(
-            node
-        )
+        node = self.prepare_node(node)
         if node.name in ignorelist:
-            return classes.AbstractSyntaxTree(
-                "None", source_file=self._source_file
-            )
+            return classes.AbstractSyntaxTree("None", source_file=self._source_file)
 
         for field, child in ast.iter_fields(node.ast_node):
             if isinstance(child, list):
@@ -115,7 +101,5 @@ class main(classes.SourceFile):
             ignored_statements=self.ignored_statements,
         )
 
-        with open(file_name,encoding='utf-8', errors='ignore') as f:
-            self._tree = nt.visit(
-                ast.parse(source=f.read())
-            )
+        with open(file_name, encoding="utf-8", errors="ignore") as f:
+            self._tree = nt.visit(ast.parse(source=f.read()))
