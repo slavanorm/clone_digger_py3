@@ -3,7 +3,7 @@ from pathlib import Path
 from jinja2 import Template
 
 from clonedigger.settings import cfg
-from clonedigger.backend import classes
+from clonedigger.backend.clone_detection_algorithm import Unifier
 
 
 class Report:
@@ -32,7 +32,7 @@ class HTMLReport(Report):
             rows = []
             for i in range(len(clone[0])):
                 statements = [clone[j][i] for j in [0, 1]]
-                u = classes.Unifier(*statements)
+                u = Unifier(*statements)
                 rows += [[u.getSize() > 0, *[e.as_string() for e in statements]]]
             table += [
                 dict(
@@ -41,7 +41,7 @@ class HTMLReport(Report):
                     cloned_length=max(
                         len(set(e.getCoveredLineNumbers())) for e in clone
                     ),
-                    filenames=[e._source_file._file_name for e in clone],
+                    filenames=[e.source_file.file_name for e in clone],
                     linenos=[min(e[0].getCoveredLineNumbers()) + 1 for e in clone],
                     rows=rows,
                 )
@@ -85,7 +85,7 @@ class HTMLReport(Report):
                     "<BR>"
                     + str(len(self.mark_to_statement_hash[mark]))
                     + ":"
-                    + str(mark.getUnifierTree())
+                    + str(mark.unifier_tree)
                     + "<a href=\"javascript:unhide('stmt%d');\">show/hide representatives</a> "
                     % counter
                 )

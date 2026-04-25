@@ -1,4 +1,5 @@
 import logging
+import sys
 from pydantic import BaseModel
 
 
@@ -20,3 +21,10 @@ class Settings(BaseModel):
 
 
 cfg = Settings()
+
+logger = logging.getLogger()
+logger.setLevel(cfg.logger_level)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(cfg.logger_level)
+logger.addHandler(handler)

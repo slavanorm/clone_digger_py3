@@ -1,6 +1,274 @@
+from __future__ import annotations
 import ast
 from pathlib import Path
-from . import classes
+from clonedigger.settings import cfg
+
+free_variables_count = cfg.free_variables_count
+free_variable_cost = cfg.free_variable_cost
+
+
+class SourceFile:
+    size_threshold = 5
+    distance_threshold = 5
+
+    def __init__(self, file_name: Path):
+        f = open(file_name, "r", encoding="utf-8", errors="ignore")
+
+        def filter_func(s):
+            for i in range(len(s) - 1, -2, -1):
+                if i < 0 or not s[i].isspace():
+                    break
+            if i >= 0:
+                return s[: i + 1]
+            else:
+                return s
+
+        self.source_lines = [filter_func(s) for s in f.readlines()]
+        f.close()
+        self.file_name = file_name
+
+
+class StatementSequence:
+    def __init__(
+        self, sequence: list[AbstractSyntaxTree] = None, source_file: SourceFile = None
+    ):
+        self._sequence = []
+        self.source_file = source_file
+        for s in sequence or []:
+            self.addStatement(s)
+
+    def getCoveredLineNumbers(self):
+        r = set()
+        for s in self:
+            r.update(s.getCoveredLineNumbers())
+        return r
+
+    def getAncestors(self):
+        return self[0].getAncestors()
+
+    def addStatement(self, statement: AbstractSyntaxTree):
+        self._sequence.append(statement)
+        if not self.source_file:
+            self.source_file = statement.source_file
+        else:
+            assert self.source_file == statement.source_file
+
+    def __getitem__(self, *args):
+        return self._sequence.__getitem__(*args)
+
+    def __len__(self):
+        return self._sequence.__len__()
+
+    def getWeight(self):
+        return sum([s.mark.unifier_tree.getSize() for s in self._sequence])
+
+    def getLineNumberHashables(self):
+        line_numbers = self.getCoveredLineNumbers()
+        return set([(self.source_file.file_name, e) for e in line_numbers])
+
+    def constructTree(self):
+        tree = AbstractSyntaxTree("__SEQUENCE__")
+        for statement in self:
+            tree.addChild(statement, True)
+        return tree
+
+    def getCoveredLineNumbersCount(self):
+        covered = set()
+        for t in self:
+            covered.update(t.getCoveredLineNumbers())
+        return len(covered)
+
+
+class AbstractSyntaxTree:
+    def __init__(
+        self,
+        name: str = None,
+        line_numbers: list[int] = None,
+        source_file: SourceFile = None,
+    ):
+        self.childs = []
+        self._line_numbers = line_numbers or []
+        self._covered_line_numbers = None
+        self.parent = None
+        self._hash = None
+        self.source_file = source_file
+        self._is_statement = False
+        self.ast_node = None
+        self.name = name or "AbstractSyntaxTree"
+        self.mark = None
+
+    def getCoveredLineNumbers(self):
+        return self._covered_line_numbers
+
+    def getAncestors(self):
+        r = []
+        t = self.parent
+        while t:
+            if isinstance(t, ast.stmt):
+                r.append(t)
+            t = t.parent
+        return r
+
+    def getSourceLines(self):
+        source_line_numbers = self.getCoveredLineNumbers()
+        source_line_numbers_list = list(
+            range(
+                min(source_line_numbers),
+                max(source_line_numbers) + 1,
+            )
+        )
+        source_line_numbers_list.sort()
+        return [self.source_file.source_lines[e] for e in source_line_numbers_list]
+
+    def propagateCoveredLineNumbers(self):
+        self._covered_line_numbers = set(self._line_numbers)
+        for child in self.childs:
+            self._covered_line_numbers.update(child.propagateCoveredLineNumbers())
+        return self._covered_line_numbers
+
+    def propagateHeight(self):
+        if len(self.childs) == 0:
+            self._height = 0
+        else:
+            self._height = max([c.propagateHeight() for c in self.childs]) + 1
+        return self._height
+
+    def addChild(self, child: AbstractSyntaxTree, save_parent: bool = False):
+        if not save_parent:
+            child.parent = self
+        self.childs.append(child)
+
+    def getFullHash(self):
+        return self.getDCupHash(-1)
+
+    def getDCupHash(self, level: int):
+        if len(self.childs) == 0:
+            ret = 0  # in case of names and constants
+        else:
+            ret = (level + 1) * hash(self.name) * len(self.childs)
+        # if level == -1, it will not stop until it reaches the leaves
+        if level != 0:
+            for i in range(len(self.childs)):
+                child = self.childs[i]
+                ret += (i + 1) * child.getDCupHash(level - 1)
+        return hash(ret)
+
+    def __hash__(self):
+        if not self._hash:
+            self._hash = hash(self.getDCupHash(3) + hash(self.name))
+
+        return self._hash
+
+    def __eq__(self, tree2):
+        tree1 = self
+        if type(tree2) == type(None):
+            return False
+        if tree1.name != tree2.name:
+            return False
+        if len(tree1.childs) != len(tree2.childs):
+            return False
+        for i in range(len(tree1.childs)):
+            if tree1.childs[i] != tree2.childs[i]:
+                return False
+        return True
+
+    def getStatementSequences(self):
+
+        not_empty = lambda x: x and len(x.getCoveredLineNumbers()) >= cfg.size_threshold
+
+        r = []
+        current = StatementSequence(source_file=self.source_file)
+
+        if self.source_file is None:
+            v = 1
+
+        for child in self.childs:
+            if isinstance(child.ast_node, ast.stmt):
+                current.addStatement(child)
+            elif not_empty(current):
+                r += [current]
+                current = StatementSequence(source_file=self.source_file)
+
+            # recursion here
+            r += child.getStatementSequences()
+
+        if not_empty(current):
+            r += [current]
+
+        return r
+
+    def storeSize(self):
+        observed = set()
+        self._none_count = 0
+
+        def rec_calc_size(t):
+            r = 0
+            if t not in observed:
+                if len(t.childs):
+                    for c in t.childs:
+                        r += rec_calc_size(c)
+                else:
+                    observed.add(t)
+                    if t.name == "None":
+                        self._none_count += 1
+                    if t.__class__.__name__ == "FreeVariable":
+                        r += free_variable_cost
+                    else:
+                        r += 1
+            return r
+
+        self._size = rec_calc_size(self)
+
+    def getSize(self, ignore_none: bool = True):
+        ret = self._size
+        if ignore_none:
+            ret -= self._none_count
+        return ret
+
+    def getTokenCount(self):
+        def rec_calc_size(t):
+            if len(t.childs):
+                if t.name in [
+                    "Add",
+                    "Assign",
+                    "Sub",
+                    "Div",
+                    "Mul",
+                    "Mod",
+                    "Function",
+                    "If",
+                    "Class",
+                    "Raise",
+                ]:
+                    r = 1
+                else:
+                    r = 0
+                for c in t.childs:
+                    r += rec_calc_size(c)
+            else:
+                if t.name[0] != "'" and t.name != "Pass":
+                    return 0
+                else:
+                    return 1
+            return r
+
+        return rec_calc_size(self)
+
+    def as_string(self):
+        return "\n".join(
+            [
+                self.source_file.source_lines[e]
+                for e in sorted(list(self._covered_line_numbers))
+            ]
+        )
+
+
+class FreeVariable(AbstractSyntaxTree):
+    def __init__(self):
+        global free_variables_count
+        free_variables_count += 1
+        name = "VAR(%d)" % (free_variables_count)
+        AbstractSyntaxTree.__init__(self, name)
 
 
 class NT(ast.NodeTransformer):
@@ -10,18 +278,18 @@ class NT(ast.NodeTransformer):
         super().__init__(*args, **kwargs)
 
     def prepare_node(self, node: ast.AST):
-        if isinstance(node, classes.AbstractSyntaxTree):
+        if isinstance(node, AbstractSyntaxTree):
             # can do later: learn why it happens
             return node
         if not node:
-            return classes.AbstractSyntaxTree("None", source_file=self._source_file)
+            return AbstractSyntaxTree("None", source_file=self._source_file)
 
         # set lines
         name = node.__class__.__name__
         line_numbers = []
         if isinstance(node, ast.AST):
             if name in self.ignored_statements:
-                return classes.AbstractSyntaxTree("None", source_file=self._source_file)
+                return AbstractSyntaxTree("None", source_file=self._source_file)
             """
             if name in ["FunctionDef", "Class"]:
                 # can have ignorelist
@@ -37,7 +305,7 @@ class NT(ast.NodeTransformer):
             if "lineno" in node._attributes:
                 line_numbers = [node.lineno - 1]
 
-        node_prepared = classes.AbstractSyntaxTree(
+        node_prepared = AbstractSyntaxTree(
             name=name,
             line_numbers=line_numbers,
             source_file=self._source_file,
@@ -48,16 +316,16 @@ class NT(ast.NodeTransformer):
 
     def generic_visit(self, node: ast.AST):
         def write_node_relations(node, child):
-            assert isinstance(node, classes.AbstractSyntaxTree)
-            assert isinstance(child, classes.AbstractSyntaxTree)
-            child.setParent(node)
+            assert isinstance(node, AbstractSyntaxTree)
+            assert isinstance(child, AbstractSyntaxTree)
+            child.parent = node
             node.addChild(child)
 
         ignorelist = ["None"]  # cant be Module
 
         node = self.prepare_node(node)
         if node.name in ignorelist:
-            return classes.AbstractSyntaxTree("None", source_file=self._source_file)
+            return AbstractSyntaxTree("None", source_file=self._source_file)
 
         for field, child in ast.iter_fields(node.ast_node):
             if isinstance(child, list):
@@ -86,14 +354,14 @@ class NT(ast.NodeTransformer):
         return node
 
 
-class main(classes.SourceFile):
+class main(SourceFile):
     extension = "py"
     distance_threshold = 5
     size_threshold = 5
     ignored_statements = ["Import", "From", "ImportFrom"]
 
     def __init__(self, file_name: Path, func_prefixes: tuple = ()):
-        self._source_file = classes.SourceFile(file_name)
+        self._source_file = SourceFile(file_name)
         self._func_prefixes = func_prefixes
 
         nt = NT(

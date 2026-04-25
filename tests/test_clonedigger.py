@@ -1,9 +1,8 @@
 from pathlib import Path
-from unittest.mock import patch
 from clonedigger.main import main
 
 
 def test_finds_clones():
-    with patch("sys.argv", ["clonedigger", "tests/test_me.py"]):
-        main()
-    assert Path("output.html").exists()
+    output = Path("output.html")
+    main(fps=[Path("tests/test_me.py")], output=output)
+    assert output.exists()

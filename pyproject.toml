@@ -10,10 +10,10 @@ requires-python = ">=3.8"
 dependencies = ["jinja2", "pydantic"]
 
 [project.scripts]
-clonedigger = "clonedigger.main:main"
+clonedigger = "clonedigger.__main__:cli"
 
 [tool.setuptools]
 package-dir = {"clonedigger" = "src"}
 
 [tool.setuptools.package-data]
-"clonedigger.backend" = ["template.html"]
+"clonedigger.report" = ["template.html"]
