@@ -3,10 +3,11 @@ import time
 import difflib
 import re
 import os.path
+from pathlib import Path
 from jinja2 import Template
 
-import settings
-from backend import classes
+import clonedigger.settings as settings
+from clonedigger.backend import classes
 
 
 class Report:
@@ -105,7 +106,7 @@ class HTMLReport(Report):
                 marks_report += "</P>"
             result["marks_report"] = marks_report
 
-        HTML_base = open("backend/template.html").read()
+        HTML_base = open(Path(__file__).parent / "template.html").read()
         HTML_base = Template(HTML_base)
         HTML_code = HTML_base.render(**result)
         f = open(file_name, "w")

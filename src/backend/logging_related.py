@@ -1,4 +1,4 @@
-from settings import logger_level
+from clonedigger.settings import logger_level
 import logging
 import sys
 

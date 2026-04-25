@@ -1,10 +1,10 @@
-from backend import (
+from clonedigger.backend import (
     python3_related,
     html_report,
     clone_detection_algorithm,
 )
-import settings
-from backend.logging_related import logger
+import clonedigger.settings as settings
+from clonedigger.backend.logging_related import logger
 
 import sys
 import os

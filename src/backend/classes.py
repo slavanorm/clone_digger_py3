@@ -1,4 +1,4 @@
-import settings
+import clonedigger.settings as settings
 import ast
 import copy
 

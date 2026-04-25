@@ -1,9 +1,9 @@
 import logging
 import sys
 import pdb
-from backend.classes import *
-from backend.logging_related import logger
-import settings
+from clonedigger.backend.classes import *
+from clonedigger.backend.logging_related import logger
+import clonedigger.settings as settings
 
 
 def main(source_files, report):
