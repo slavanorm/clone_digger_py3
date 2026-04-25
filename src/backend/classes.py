@@ -1,16 +1,19 @@
-import clonedigger.settings as settings
+from __future__ import annotations
+from collections.abc import Callable
+from pathlib import Path
+from clonedigger.settings import cfg
 import ast
 import copy
 
-free_variables_count = settings.free_variables_count
-free_variable_cost = settings.free_variable_cost
+free_variables_count = cfg.free_variables_count
+free_variable_cost = cfg.free_variable_cost
 
 
 class SourceFile:
     size_threshold = 5
     distance_threshold = 5
 
-    def __init__(self, file_name):
+    def __init__(self, file_name: Path):
         f = open(file_name, "r",
                  encoding='utf-8',
                  errors='ignore')
@@ -30,7 +33,7 @@ class SourceFile:
         f.close()
         self._file_name = file_name
 
-    def getSourceLine(self, n):
+    def getSourceLine(self, n: int):
         return self._source_lines[n]
 
     def getFileName(self):
@@ -38,10 +41,10 @@ class SourceFile:
 
 
 class StatementSequence:
-    def __init__(self, sequence=[], source_file=None):
+    def __init__(self, sequence: list[AbstractSyntaxTree] = None, source_file: SourceFile = None):
         self._sequence = []
         self._source_file = source_file
-        for s in sequence:
+        for s in (sequence or []):
             self.addStatement(s)
 
     def getCoveredLineNumbers(self):
@@ -56,7 +59,7 @@ class StatementSequence:
     def isEmpty(self):
         return self._sequence == []
 
-    def addStatement(self, statement):
+    def addStatement(self, statement: AbstractSyntaxTree):
         self._sequence.append(statement)
         if not self._source_file:
             self._source_file = statement.getSourceFile()
@@ -109,7 +112,7 @@ class StatementSequence:
 
 
 class PairSequences:
-    def __init__(self, sequences):
+    def __init__(self, sequences: list[StatementSequence]):
         self._sequences = sequences
 
     def __getitem__(self, *args):
@@ -125,7 +128,7 @@ class PairSequences:
         unifier = Unifier(trees[0], trees[1])
         return unifier.getSize()
 
-    def subSequence(self, first, length):
+    def subSequence(self, first: int, length: int):
         return PairSequences(
             [
                 StatementSequence(
@@ -147,12 +150,12 @@ class PairSequences:
 
 
 class Substitution:
-    def __init__(self, initial_value=None):
+    def __init__(self, initial_value: dict = None):
         if not initial_value:
             initial_value = {}
         self.map = initial_value
 
-    def substitute(self, tree, without_copying=False):
+    def substitute(self, tree: AbstractSyntaxTree, without_copying: bool = False):
         if tree in list(self.map.keys()):
             return self.map[tree]
         else:
@@ -173,7 +176,7 @@ class Substitution:
         for u, tree in self.map.items():
             ret += (
                 tree.getSize(False)
-                - settings.free_variable_cost
+                - cfg.free_variable_cost
             )
         return ret
 
@@ -191,7 +194,7 @@ class SuffixTree:
             self.string_positions = []
             self.ending_strings = []
 
-    def __init__(self, f_code):
+    def __init__(self, f_code: Callable):
         self._node = self.SuffixTreeNode()
         self._f_code = f_code
 
@@ -211,7 +214,7 @@ class SuffixTree:
             self.StringPosition(string, pos + 1, prevelem)
         )
 
-    def add(self, string):
+    def add(self, string: StatementSequence):
         for i in range(len(string)):
             if i == 0:
                 prevelem = None
@@ -290,7 +293,7 @@ class SuffixTree:
 
 class Unifier:
     # Unifier is used instead of AntiUnifier
-    def __init__(self, t1, t2, ignore_parametrization=False):
+    def __init__(self, t1: AbstractSyntaxTree, t2: AbstractSyntaxTree, ignore_parametrization: bool = False):
         def combineSubs(node, s, t):
             # s and t are 2-tuples
             assert list(s[0].map) == list(
@@ -372,7 +375,7 @@ class Unifier:
 class Cluster:
     count = 0
 
-    def __init__(self, tree=None):
+    def __init__(self, tree: AbstractSyntaxTree = None):
         if tree:
             self._n = 1
             self._unifier_tree = tree
@@ -394,7 +397,7 @@ class Cluster:
     def getCount(self):
         return self._n
 
-    def getAddCost(self, tree):
+    def getAddCost(self, tree: AbstractSyntaxTree):
         unifier = Unifier(self.getUnifierTree(), tree)
         return (
             self.getCount()
@@ -402,7 +405,7 @@ class Cluster:
             + unifier.getSubstitutions()[1].getSize()
         )
 
-    def unify(self, tree):
+    def unify(self, tree: AbstractSyntaxTree):
         self._n += 1
         self._unifier_tree = Unifier(
             self.getUnifierTree(), tree
@@ -413,7 +416,7 @@ class Cluster:
         self._n = 0
         self._trees = []
 
-    def addWithoutUnification(self, tree):
+    def addWithoutUnification(self, tree: AbstractSyntaxTree):
         self._n += 1
         self._trees.append(tree)
         if (
@@ -433,10 +436,10 @@ class Cluster:
 
 class AbstractSyntaxTree:
     def __init__(
-        self, name=None, line_numbers=[], source_file=None
+        self, name: str = None, line_numbers: list[int] = None, source_file: SourceFile = None
     ):
         self.childs = []
-        self._line_numbers = line_numbers
+        self._line_numbers = line_numbers or []
         self._covered_line_numbers = None
         self._parent = None
         self._hash = None
@@ -448,7 +451,7 @@ class AbstractSyntaxTree:
     def getSourceFile(self):
         return self._source_file
 
-    def setMark(self, mark):
+    def setMark(self, mark: Cluster):
         self._mark = mark
 
     def getMark(self):
@@ -460,7 +463,7 @@ class AbstractSyntaxTree:
     def getParent(self):
         return self._parent
 
-    def setParent(self, parent):
+    def setParent(self, parent: AbstractSyntaxTree):
         self._parent = parent
 
     def getAncestors(self):
@@ -520,7 +523,7 @@ class AbstractSyntaxTree:
             )
         return self._height
 
-    def addChild(self, child, save_parent=False):
+    def addChild(self, child: AbstractSyntaxTree, save_parent: bool = False):
         if not save_parent:
             child.setParent(self)
         self.childs.append(child)
@@ -528,7 +531,7 @@ class AbstractSyntaxTree:
     def getFullHash(self):
         return self.getDCupHash(-1)
 
-    def getDCupHash(self, level):
+    def getDCupHash(self, level: int):
         if len(self.childs) == 0:
             ret = 0  # in case of names and constants
         else:
@@ -570,7 +573,7 @@ class AbstractSyntaxTree:
         not_empty = (
             lambda x: (not x.isEmpty())
             and len(x.getCoveredLineNumbers())
-            >= settings.size_threshold
+            >= cfg.size_threshold
         )
 
         r = []
@@ -620,7 +623,7 @@ class AbstractSyntaxTree:
 
         self._size = rec_calc_size(self)
 
-    def getSize(self, ignore_none=True):
+    def getSize(self, ignore_none: bool = True):
         ret = self._size
         if ignore_none:
             ret -= self._none_count

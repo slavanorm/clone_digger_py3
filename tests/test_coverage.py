@@ -1,4 +1,4 @@
-from main import main
+from clonedigger.main import main
 import os
 
 os.chdir('..')

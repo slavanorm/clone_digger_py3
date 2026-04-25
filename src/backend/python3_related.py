@@ -1,4 +1,5 @@
 import ast
+from pathlib import Path
 from . import classes
 
 
@@ -14,7 +15,7 @@ class NT(ast.NodeTransformer):
         self.ignored_statements = ignored_statements
         super().__init__(*args, **kwargs)
 
-    def prepare_node(self, node):
+    def prepare_node(self, node: ast.AST):
         if isinstance(node, classes.AbstractSyntaxTree):
             # can do later: learn why it happens
             return node
@@ -55,7 +56,7 @@ class NT(ast.NodeTransformer):
 
         return node_prepared
 
-    def generic_visit(self, node):
+    def generic_visit(self, node: ast.AST):
         def write_node_relations(node, child):
             assert isinstance(node, classes.AbstractSyntaxTree)
             assert isinstance(child, classes.AbstractSyntaxTree)
@@ -105,7 +106,7 @@ class main(classes.SourceFile):
     size_threshold = 5
     ignored_statements = ["Import", "From", "ImportFrom"]
 
-    def __init__(self, file_name, func_prefixes=()):
+    def __init__(self, file_name: Path, func_prefixes: tuple = ()):
         self._source_file = classes.SourceFile(file_name)
         self._func_prefixes = func_prefixes
 

@@ -1,12 +1,18 @@
+import copy
 import logging
 import sys
-import pdb
-from clonedigger.backend.classes import *
+from clonedigger.backend.classes import (
+    Cluster,
+    PairSequences,
+    StatementSequence,
+    SuffixTree,
+    Unifier,
+)
 from clonedigger.backend.logging_related import logger
-import clonedigger.settings as settings
+from clonedigger.settings import cfg
 
 
-def main(source_files, report):
+def main(source_files: list, report):
     def calc_statement_sizes():
         for sequence in statement_sequences:
             for statement in sequence:
@@ -19,7 +25,7 @@ def main(source_files, report):
                 if dcup_hash:
                     # 3 - CONSTANT HERE!
                     h = statement.getDCupHash(
-                        settings.hashing_depth
+                        cfg.hashing_depth
                     )
                 else:
                     h = statement.getFullHash()
@@ -39,9 +45,7 @@ def main(source_files, report):
             for statement in statements:
                 processed_statements_count += 1
                 if (processed_statements_count % 1000) == 0:
-                    logging.DEBUG(
-                        "%d," % (processed_statements_count,)
-                    )
+                    logger.debug(f"{processed_statements_count},")
                 bestcluster = None
                 mincost = sys.maxsize
                 for cluster in local_clusters:
@@ -50,12 +54,10 @@ def main(source_files, report):
                         mincost = cost
                         bestcluster = cluster
                 assert local_clusters == [] or bestcluster
-                if mincost < 0:
-                    pdb.set_trace()
                 assert mincost >= 0
                 if (
                     not bestcluster
-                ) or mincost > settings.clustering_threshold:
+                ) or mincost > cfg.clustering_threshold:
                     newcluster = Cluster(statement)
                     local_clusters.append(newcluster)
                 else:
@@ -112,22 +114,14 @@ def main(source_files, report):
                             first_statement = sequence[
                                 first_statement_index
                             ]
-                            logger.warn(
-                                [
-                                    "Warning: sequence of statements starting at %s:%d"
-                                    % (
-                                        first_statement.getSourceFile().getFileName(),
-                                        min(
-                                            first_statement.getCoveredLineNumbers()
-                                        ),
-                                    )
-                                ]
+                            logger.warning(
+                                f"Warning: sequence of statements starting at "
+                                f"{first_statement.getSourceFile().getFileName()}:"
+                                f"{min(first_statement.getCoveredLineNumbers())}"
                             )
-                            logger.warn(
-                                [
-                                    "consists of many similar statements;"
-                                    "It will be ignored. Use --force to override this restriction."
-                                ]
+                            logger.warning(
+                                "consists of many similar statements; "
+                                "It will be ignored. Use --force to override this restriction."
                             )
                             flag = True
             new_sequence = new_sequence + [None]
@@ -172,7 +166,7 @@ def main(source_files, report):
                 s1,
                 s2,
             ) in suffix_tree_instance.getBestMaxSubstrings(
-                settings.size_threshold, f, f_elem
+                cfg.size_threshold, f, f_elem
             )
         ]
 
@@ -193,7 +187,7 @@ def main(source_files, report):
                     size = (
                         new_pair_sequences.getMaxCoveredLineNumbersCount()
                     )
-                    if size >= settings.size_threshold:
+                    if size >= cfg.size_threshold:
                         lr.append((new_pair_sequences, first))
                 return lr
 
@@ -208,7 +202,7 @@ def main(source_files, report):
                     first,
                 ) in new_pairs_sequences:
                     distance = candidate_sequence.calcDistance()
-                    if distance < settings.distance_threshold:
+                    if distance < cfg.distance_threshold:
                         r.append(candidate_sequence)
                         if first > 0:
                             pairs_sequences.append(
@@ -291,7 +285,7 @@ def main(source_files, report):
         )
         max_seq_length = max(sequences_lengths)
 
-        logger.debug(["%d sequences" % (n_sequences,)])
+        logger.debug(f"{n_sequences} sequences")
         logger.debug(
             "average sequence length: %f" % (avg_seq_length,)
         )
@@ -300,54 +294,34 @@ def main(source_files, report):
         )
         sequences_without_restriction = statement_sequences
         sequences = []
-        if not settings.force:
+        if not cfg.force:
             for sequence in sequences_without_restriction:
                 if len(sequence) > 1000:
                     first_statement = sequence[0]
-                    logger.warn(
-                        [
-                            "Warning: sequences of statements, consists of %d elements is too long."
-                            % len(sequence),
-                            "It starts at %s:%d."
-                            % (
-                                first_statement.getSourceFile().getFileName(),
-                                min(
-                                    first_statement.getCoveredLineNumbers()
-                                ),
-                            ),
-                            "It will be ignored. Use --force to override this "
-                            "restriction.",
-                        ]
+                    logger.warning(
+                        f"Warning: sequences of statements, consists of {len(sequence)} elements is too long. "
+                        f"It starts at {first_statement.getSourceFile().getFileName()}:"
+                        f"{min(first_statement.getCoveredLineNumbers())}. "
+                        f"It will be ignored. Use --force to override this restriction."
                     )
                 else:
                     sequences.append(sequence)
 
-    logger.debug(
-        [
-            "Number of statements: ",
-            statement_count,
-            "Calculating size for each statement...",
-        ]
-    )
+    logger.debug(f"Number of statements: {statement_count}. Calculating size for each statement...")
     calc_statement_sizes()
 
     logger.debug("Building statement hash...")
     report.startTimer("Building statement hash")
 
     hash_to_statement = build_hash_to_statement(
-        dcup_hash=(not settings.clusterize_using_hash)
+        dcup_hash=(not cfg.clusterize_using_hash)
     )
     report.stopTimer()
-    logger.debug(
-        [
-            "Number of different hash values: ",
-            len(hash_to_statement),
-        ]
-    )
+    logger.debug(f"Number of different hash values: {len(hash_to_statement)}")
 
     if (
-        settings.clusterize_using_dcup
-        or settings.clusterize_using_hash
+        cfg.clusterize_using_dcup
+        or cfg.clusterize_using_hash
     ):
         logger.debug(
             "Marking each statement with its hash value"
@@ -358,19 +332,13 @@ def main(source_files, report):
         report.startTimer("Building patterns")
         clusters_map = build_unifiers(hash_to_statement)
         report.stopTimer()
-        logger.debug(
-            [
-                Cluster.count,
-                "patterns were discovered",
-                "Choosing pattern for each statement...",
-            ]
-        )
+        logger.debug(f"{Cluster.count} patterns were discovered. Choosing pattern for each statement...")
 
         report.startTimer("Marking similar statements")
         clusterize(hash_to_statement, clusters_map)
         report.stopTimer()
 
-    if settings.report_unifiers:
+    if cfg.report_unifiers:
         logger.debug("Building reverse hash for reporting ...")
         reverse_hash = {}
         for sequence in statement_sequences:
@@ -384,7 +352,7 @@ def main(source_files, report):
     logger.debug(
         "Finding similar sequences of statements...",
     )
-    if not settings.force:
+    if not cfg.force:
         statement_sequences = (
             filterOutLongEquallyLabeledSequences(
                 statement_sequences
@@ -394,31 +362,20 @@ def main(source_files, report):
     report.startTimer("Finding similar sequences of statements")
     duplicate_candidates = findHugeSequences()
     report.stopTimer()
-    logger.debug(
-        [
-            len(duplicate_candidates),
-            " sequences were found",
-            "Refining candidates...",
-        ]
-    )
+    logger.debug(f"{len(duplicate_candidates)} sequences were found. Refining candidates...")
 
-    if settings.distance_threshold != -1:
+    if cfg.distance_threshold != -1:
         report.startTimer("Refining candidates")
         duplicate_candidates = refineDuplicates(duplicate_candidates)
         report.stopTimer()
 
-    logger.debug([len(duplicate_candidates), "clones were found"])
-    if settings.distance_threshold != -1:
+    logger.debug(f"{len(duplicate_candidates)} clones were found")
+    if cfg.distance_threshold != -1:
         logger.debug("Removing dominated clones...")
 
         old_clone_count = len(duplicate_candidates)
         duplicate_candidates = remove_dominated_clones(duplicate_candidates)
-        logger.debug(
-            [
-                len(duplicate_candidates) - old_clone_count,
-                "clones were removed",
-            ]
-        )
+        logger.debug(f"{len(duplicate_candidates) - old_clone_count} clones were removed")
 
     covered_source_lines = set()
     for clone in duplicate_candidates:

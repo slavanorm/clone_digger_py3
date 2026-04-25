@@ -1,12 +1,8 @@
-import logging
 import time
-import difflib
-import re
-import os.path
 from pathlib import Path
 from jinja2 import Template
 
-import clonedigger.settings as settings
+from clonedigger.settings import cfg
 from clonedigger.backend import classes
 
 
@@ -24,15 +20,15 @@ class Report:
             key=lambda x: -x.getMaxCoveredLineNumbersCount()
         )
 
-    def startTimer(self, descr):
+    def startTimer(self, descr: str):
         self.timers.append([descr, time.time(), time.ctime()])
 
-    def stopTimer(self, descr=""):
+    def stopTimer(self, descr: str = ""):
         self.timers[-1][1] = time.time() - self.timers[-1][1]
 
 class HTMLReport(Report):
 
-    def writeReport(self, file_name):
+    def writeReport(self, file_name: Path):
         clone_descriptions =[]
         for idx, clone in enumerate(self.clones):
             rows = []
@@ -54,7 +50,7 @@ class HTMLReport(Report):
 
         result = dict(
             files=self.file_names,
-            params=settings.__dict__,
+            params=cfg.model_dump(),
             count_clones=len(self.clones),
             lines_dup=lines_dup,
             lines_ttl=lines_ttl,
@@ -65,7 +61,7 @@ class HTMLReport(Report):
             table=clone_descriptions
         )
 
-        if settings.print_time:
+        if cfg.print_time:
             timings = ""
             timings += "<B>Time elapsed</B><BR>"
             timings += "<BR>\n".join(
@@ -106,9 +102,8 @@ class HTMLReport(Report):
                 marks_report += "</P>"
             result["marks_report"] = marks_report
 
-        HTML_base = open(Path(__file__).parent / "template.html").read()
-        HTML_base = Template(HTML_base)
+        with open(Path(__file__).parent / "template.html") as f:
+            HTML_base = Template(f.read())
         HTML_code = HTML_base.render(**result)
-        f = open(file_name, "w")
-        f.write(HTML_code)
-        f.close()
+        with open(file_name, "w") as f:
+            f.write(HTML_code)

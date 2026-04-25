@@ -3,17 +3,17 @@ from clonedigger.backend import (
     html_report,
     clone_detection_algorithm,
 )
-import clonedigger.settings as settings
+from clonedigger.settings import cfg
 from clonedigger.backend.logging_related import logger
 
 import sys
-import os
+from pathlib import Path
 from argparse import ArgumentParser
 
 
-def main(files_to_parse: os.path = "tests/test_me.py"):
+def main(fps: list[Path] = "tests/test_me.py"):
     def parse_file(file_name, func_prefixes):
-        logger.info(["Parsing ", file_name, "..."])
+        logger.info(f"Parsing {file_name}...")
         source_file = supplier(file_name, func_prefixes)
         source_file._tree.propagateCoveredLineNumbers()
         source_file._tree.propagateHeight()
@@ -26,10 +26,11 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
 
     # region parse options
     if len(sys.argv) > 1:
-        files_to_parse = []
+        fps = []
 
-    if isinstance(files_to_parse, str):
-        files_to_parse = [files_to_parse]
+    if isinstance(fps, (str, Path)):
+        fps = [fps]
+    fps = [Path(e) for e in fps]
 
     cmdline = ArgumentParser(
         usage="""To run Clone Digger type:
@@ -52,9 +53,9 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
     kwargs = [
         dict(
             args="file_list",
-            help="files to parse",
+            help="fps to parse",
             nargs="?",
-            default=files_to_parse,
+            default=fps,
         ),
         dict(
             args="--no-recursion",
@@ -153,12 +154,7 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
                 args = [args]
         cmdline.add_argument(*args, **kw)
 
-    cmdline.set_defaults(
-        # file_list=override,
-        # ingore_dirs=[],
-        # f_prefixes=None,
-        **settings.__dict__
-    )
+    cmdline.set_defaults(**cfg.model_dump())
     options = cmdline.parse_args()
 
     options.ignore_dirs = options.ignore_dirs or []
@@ -174,48 +170,34 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
     if options.output is None:
         options.output = "output.html"
 
-    for k, v in vars(options).items():
-        if not k.startswith("_"):
-            settings.__dict__[k] = v
-    if options.distance_threshold is None:
-        settings.distance_threshold = (
-            supplier.distance_threshold
-        )
-    if options.size_threshold is None:
-        settings.size_threshold = supplier.size_threshold
+    overrides = {k: getattr(options, k) for k, _ in cfg if getattr(options, k, None) is not None}
+    overrides.setdefault("distance_threshold", supplier.distance_threshold)
+    overrides.setdefault("size_threshold", supplier.size_threshold)
+    cfg.__dict__.update(overrides)
 
     # endregion
 
     # region collect filenames
-    filenames = []
-    for file_name in options.file_list:
-        if os.path.isdir(file_name):
-            if settings.no_recursion:
-                filenames += [
-                    os.path.join(file_name, f)
-                    for f in os.listdir(file_name)
-                ]
+    fps = []
+    for fp in options.file_list:
+        fp = Path(fp)
+        if fp.is_dir():
+            if cfg.no_recursion:
+                fps += list(fp.iterdir())
             else:
-                filenames += [
-                    os.path.join(dirpath, f)
-                    for dirpath, dirnames, filenames0 in os.walk(
-                        file_name
-                    )
-                    if dirnames not in options.ignore_dirs
-                    for f in filenames0
+                fps += [
+                    e for e in fp.rglob("*")
+                    if e.is_file()
+                    and e.parent.name not in (options.ignore_dirs or [])
                 ]
         else:
-            filenames = options.file_list
-    filenames = [
-        e
-        for e in filenames
-        if os.path.splitext(e)[1][1:] == supplier.extension
-    ]
+            fps.append(fp)
+    fps = [e for e in fps if e.suffix == f".{supplier.extension}"]
     # endregion
 
     report.startTimer("Construction of AST")
-    for f in filenames:
-        parse_file(f, func_prefixes)
+    for fp in fps:
+        parse_file(fp, func_prefixes)
     report.stopTimer()
 
     report.clones = clone_detection_algorithm.main(
@@ -225,11 +207,10 @@ def main(files_to_parse: os.path = "tests/test_me.py"):
     report.sort()
     try:
         report.writeReport(options.output)
-    except:
+    except Exception:
         logger.error("caught error, removing output file")
-        if os.path.exists(options.output):
-            os.remove(options.output)
+        output = Path(options.output)
+        if output.exists():
+            output.unlink()
         raise
 
-if __name__ == '__main__':
-    main()
