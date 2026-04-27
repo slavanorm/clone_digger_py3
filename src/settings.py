@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 
 class Settings(BaseModel):
+    model_config = {"frozen": True}
     # todo: describe settings
     clustering_threshold: int = 30  # looks doesnt work
     hashing_depth: int = 1
@@ -13,18 +14,13 @@ class Settings(BaseModel):
     print_time: bool = False  # report time
     force: bool = False  # check very long sequences
     no_recursion: bool = False
-    logger_level: int = logging.DEBUG  # logging.INFO
+    logger_level: int = logging.DEBUG
     free_variable_cost: float = 0.5
     free_variables_count: int = 1
     size_threshold: int = 5
     distance_threshold: int = 5
 
 
-cfg = Settings()
-
 logger = logging.getLogger()
-logger.setLevel(cfg.logger_level)
-
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(cfg.logger_level)
 logger.addHandler(handler)

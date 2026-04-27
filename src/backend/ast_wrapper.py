@@ -1,15 +1,7 @@
 from __future__ import annotations
 import ast
 from pathlib import Path
-from clonedigger.settings import cfg
-
-free_variables_count = cfg.free_variables_count
-free_variable_cost = cfg.free_variable_cost
-
-
 class SourceFile:
-    size_threshold = 5
-    distance_threshold = 5
 
     def __init__(self, file_name: Path):
         f = open(file_name, "r", encoding="utf-8", errors="ignore")
@@ -60,7 +52,7 @@ class StatementSequence:
         return self._sequence.__len__()
 
     def getWeight(self):
-        return sum([s.mark.unifier_tree.getSize() for s in self._sequence])
+        return sum([s.mark.pattern.getSize() for s in self._sequence])
 
     def getLineNumberHashables(self):
         line_numbers = self.getCoveredLineNumbers()
@@ -172,9 +164,9 @@ class AbstractSyntaxTree:
                 return False
         return True
 
-    def getStatementSequences(self):
+    def getStatementSequences(self, size_threshold: int):
 
-        not_empty = lambda x: x and len(x.getCoveredLineNumbers()) >= cfg.size_threshold
+        not_empty = lambda x: x and len(x.getCoveredLineNumbers()) >= size_threshold
 
         r = []
         current = StatementSequence(source_file=self.source_file)
@@ -190,14 +182,14 @@ class AbstractSyntaxTree:
                 current = StatementSequence(source_file=self.source_file)
 
             # recursion here
-            r += child.getStatementSequences()
+            r += child.getStatementSequences(size_threshold=size_threshold)
 
         if not_empty(current):
             r += [current]
 
         return r
 
-    def storeSize(self):
+    def storeSize(self, free_variable_cost: float):
         observed = set()
         self._none_count = 0
 
@@ -264,10 +256,11 @@ class AbstractSyntaxTree:
 
 
 class FreeVariable(AbstractSyntaxTree):
+    count = 0
+
     def __init__(self):
-        global free_variables_count
-        free_variables_count += 1
-        name = "VAR(%d)" % (free_variables_count)
+        FreeVariable.count += 1
+        name = "VAR(%d)" % FreeVariable.count
         AbstractSyntaxTree.__init__(self, name)
 
 
@@ -354,10 +347,8 @@ class NT(ast.NodeTransformer):
         return node
 
 
-class main(SourceFile):
+class ASTWrapper:
     extension = "py"
-    distance_threshold = 5
-    size_threshold = 5
     ignored_statements = ["Import", "From", "ImportFrom"]
 
     def __init__(self, file_name: Path, func_prefixes: tuple = ()):

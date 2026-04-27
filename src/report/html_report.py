@@ -2,7 +2,6 @@ import time
 from pathlib import Path
 from jinja2 import Template
 
-from clonedigger.settings import cfg
 from clonedigger.backend.clone_detection_algorithm import Unifier
 
 
@@ -26,13 +25,13 @@ class Report:
 
 
 class HTMLReport(Report):
-    def writeReport(self, file_name: Path):
+    def writeReport(self, file_name: Path, cfg):
         table = []
         for idx, clone in enumerate(self.clones):
             rows = []
             for i in range(len(clone[0])):
                 statements = [clone[j][i] for j in [0, 1]]
-                u = Unifier(*statements)
+                u = Unifier(*statements, cfg=cfg)
                 rows += [[u.getSize() > 0, *[e.as_string() for e in statements]]]
             table += [
                 dict(
@@ -85,7 +84,7 @@ class HTMLReport(Report):
                     "<BR>"
                     + str(len(self.mark_to_statement_hash[mark]))
                     + ":"
-                    + str(mark.unifier_tree)
+                    + str(mark.pattern)
                     + "<a href=\"javascript:unhide('stmt%d');\">show/hide representatives</a> "
                     % counter
                 )

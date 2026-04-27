@@ -1,13 +1,12 @@
 import sys
 from pathlib import Path
 from argparse import ArgumentParser
-from clonedigger.backend import ast_wrapper
-from clonedigger.settings import cfg
+from clonedigger.settings import Settings
 from clonedigger.main import main
 
 
 def cli():
-    wrapper = ast_wrapper.main
+
 
     cmdline = ArgumentParser(
         usage="""To run Clone Digger type:
@@ -130,16 +129,12 @@ def cli():
                 args = [args]
         cmdline.add_argument(*args, **kw)
 
-    cmdline.set_defaults(**cfg.model_dump())
+    cmdline.set_defaults(**Settings().model_dump())
     options = cmdline.parse_args()
 
-    # update cfg
-    overrides = {
-        k: getattr(options, k) for k, _ in cfg if getattr(options, k, None) is not None
-    }
-    overrides.setdefault("distance_threshold", wrapper.distance_threshold)
-    overrides.setdefault("size_threshold", wrapper.size_threshold)
-    cfg.__dict__.update(overrides)
+    cfg = Settings(**{
+        k: getattr(options, k) for k, v in Settings() if getattr(options, k, None) is not None
+    })
 
     # resolve func prefixes
     func_prefixes = []
@@ -168,9 +163,7 @@ def cli():
                 ]
         else:
             fps.append(fp)
-    fps = [e for e in fps if e.suffix == f".{wrapper.extension}"]
-
-    main(fps=fps, output=output, func_prefixes=func_prefixes)
+    main(fps=fps, output=output, func_prefixes=func_prefixes, cfg=cfg)
 
 
 cli()
