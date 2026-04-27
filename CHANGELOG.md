@@ -41,8 +41,16 @@
 - `class main` → `class ASTWrapper`
 - Move extension filter from `__main__` to `main.py`
 - Move `SourceFile.size_threshold`/`distance_threshold` to Settings
+- Extract `get_statement_sequences` to module-level function
+- Split AbstractSyntaxTree into mixins: TreeMixin, HashMixin, LineMixin, SizeMixin
 
 ## TODO
 
-### AbstractSyntaxTree god class
-Handles tree structure, hashing, line tracking, mark/cluster assignment, statement sequence extraction, size calculation, and string rendering — 6 responsibilities in one class.
+### #6 Source code in report gets lost — FIXED
+Used `end_lineno` to track full line ranges for AST nodes. Added regression test `test_multiline_strings_preserved`.
+
+### #3 Diff chunk code in output.html — VERIFIED FIXED
+Added regression test `test_diff_chunks_formatted`.
+
+### #2 Semantic clone detection
+Not supported. CloneDigger only detects syntactic (Type 1/2/3) clones via anti-unification. Semantic (Type 4) detection would require a fundamentally different approach.

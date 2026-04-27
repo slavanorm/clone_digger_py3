@@ -71,24 +71,56 @@ class StatementSequence:
         return len(covered)
 
 
-class AbstractSyntaxTree:
-    def __init__(
-        self,
-        name: str = None,
-        line_numbers: list[int] = None,
-        source_file: SourceFile = None,
-    ):
-        self.childs = []
-        self._line_numbers = line_numbers or []
-        self._covered_line_numbers = None
-        self.parent = None
-        self._hash = None
-        self.source_file = source_file
-        self._is_statement = False
-        self.ast_node = None
-        self.name = name or "AbstractSyntaxTree"
-        self.mark = None
+class TreeMixin:
+    def addChild(self, child, save_parent: bool = False):
+        if not save_parent:
+            child.parent = self
+        self.childs.append(child)
 
+    def propagateHeight(self):
+        if len(self.childs) == 0:
+            self._height = 0
+        else:
+            self._height = max([c.propagateHeight() for c in self.childs]) + 1
+        return self._height
+
+
+class HashMixin:
+    def getFullHash(self):
+        return self.getDCupHash(-1)
+
+    def getDCupHash(self, level: int):
+        if len(self.childs) == 0:
+            ret = 0  # in case of names and constants
+        else:
+            ret = (level + 1) * hash(self.name) * len(self.childs)
+        # if level == -1, it will not stop until it reaches the leaves
+        if level != 0:
+            for i in range(len(self.childs)):
+                child = self.childs[i]
+                ret += (i + 1) * child.getDCupHash(level - 1)
+        return hash(ret)
+
+    def __hash__(self):
+        if not self._hash:
+            self._hash = hash(self.getDCupHash(3) + hash(self.name))
+        return self._hash
+
+    def __eq__(self, tree2):
+        tree1 = self
+        if type(tree2) == type(None):
+            return False
+        if tree1.name != tree2.name:
+            return False
+        if len(tree1.childs) != len(tree2.childs):
+            return False
+        for i in range(len(tree1.childs)):
+            if tree1.childs[i] != tree2.childs[i]:
+                return False
+        return True
+
+
+class LineMixin:
     def getCoveredLineNumbers(self):
         return self._covered_line_numbers
 
@@ -118,77 +150,16 @@ class AbstractSyntaxTree:
             self._covered_line_numbers.update(child.propagateCoveredLineNumbers())
         return self._covered_line_numbers
 
-    def propagateHeight(self):
-        if len(self.childs) == 0:
-            self._height = 0
-        else:
-            self._height = max([c.propagateHeight() for c in self.childs]) + 1
-        return self._height
+    def as_string(self):
+        return "\n".join(
+            [
+                self.source_file.source_lines[e]
+                for e in sorted(list(self._covered_line_numbers))
+            ]
+        )
 
-    def addChild(self, child: AbstractSyntaxTree, save_parent: bool = False):
-        if not save_parent:
-            child.parent = self
-        self.childs.append(child)
 
-    def getFullHash(self):
-        return self.getDCupHash(-1)
-
-    def getDCupHash(self, level: int):
-        if len(self.childs) == 0:
-            ret = 0  # in case of names and constants
-        else:
-            ret = (level + 1) * hash(self.name) * len(self.childs)
-        # if level == -1, it will not stop until it reaches the leaves
-        if level != 0:
-            for i in range(len(self.childs)):
-                child = self.childs[i]
-                ret += (i + 1) * child.getDCupHash(level - 1)
-        return hash(ret)
-
-    def __hash__(self):
-        if not self._hash:
-            self._hash = hash(self.getDCupHash(3) + hash(self.name))
-
-        return self._hash
-
-    def __eq__(self, tree2):
-        tree1 = self
-        if type(tree2) == type(None):
-            return False
-        if tree1.name != tree2.name:
-            return False
-        if len(tree1.childs) != len(tree2.childs):
-            return False
-        for i in range(len(tree1.childs)):
-            if tree1.childs[i] != tree2.childs[i]:
-                return False
-        return True
-
-    def getStatementSequences(self, size_threshold: int):
-
-        not_empty = lambda x: x and len(x.getCoveredLineNumbers()) >= size_threshold
-
-        r = []
-        current = StatementSequence(source_file=self.source_file)
-
-        if self.source_file is None:
-            v = 1
-
-        for child in self.childs:
-            if isinstance(child.ast_node, ast.stmt):
-                current.addStatement(child)
-            elif not_empty(current):
-                r += [current]
-                current = StatementSequence(source_file=self.source_file)
-
-            # recursion here
-            r += child.getStatementSequences(size_threshold=size_threshold)
-
-        if not_empty(current):
-            r += [current]
-
-        return r
-
+class SizeMixin:
     def storeSize(self, free_variable_cost: float):
         observed = set()
         self._none_count = 0
@@ -246,13 +217,24 @@ class AbstractSyntaxTree:
 
         return rec_calc_size(self)
 
-    def as_string(self):
-        return "\n".join(
-            [
-                self.source_file.source_lines[e]
-                for e in sorted(list(self._covered_line_numbers))
-            ]
-        )
+
+class AbstractSyntaxTree(TreeMixin, HashMixin, LineMixin, SizeMixin):
+    def __init__(
+        self,
+        name: str = None,
+        line_numbers: list[int] = None,
+        source_file: SourceFile = None,
+    ):
+        self.childs = []
+        self._line_numbers = line_numbers or []
+        self._covered_line_numbers = None
+        self.parent = None
+        self._hash = None
+        self.source_file = source_file
+        self._is_statement = False
+        self.ast_node = None
+        self.name = name or "AbstractSyntaxTree"
+        self.mark = None
 
 
 class FreeVariable(AbstractSyntaxTree):
@@ -296,7 +278,9 @@ class NT(ast.NodeTransformer):
                         )
             """
             if "lineno" in node._attributes:
-                line_numbers = [node.lineno - 1]
+                start = node.lineno - 1
+                end = getattr(node, "end_lineno", node.lineno) - 1
+                line_numbers = list(range(start, end + 1))
 
         node_prepared = AbstractSyntaxTree(
             name=name,
@@ -345,6 +329,28 @@ class NT(ast.NodeTransformer):
                 child = self.prepare_node(child)
                 write_node_relations(node, child)
         return node
+
+
+def get_statement_sequences(tree: AbstractSyntaxTree, size_threshold: int):
+    not_empty = lambda x: x and len(x.getCoveredLineNumbers()) >= size_threshold
+
+    r = []
+    current = StatementSequence(source_file=tree.source_file)
+
+    for child in tree.childs:
+        if isinstance(child.ast_node, ast.stmt):
+            current.addStatement(child)
+        elif not_empty(current):
+            r += [current]
+            current = StatementSequence(source_file=tree.source_file)
+
+        # recursion here
+        r += get_statement_sequences(child, size_threshold=size_threshold)
+
+    if not_empty(current):
+        r += [current]
+
+    return r
 
 
 class ASTWrapper:

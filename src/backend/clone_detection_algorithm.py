@@ -8,6 +8,7 @@ from clonedigger.backend.ast_wrapper import (
     AbstractSyntaxTree,
     FreeVariable,
     StatementSequence,
+    get_statement_sequences,
 )
 from clonedigger.settings import logger
 
@@ -511,7 +512,7 @@ def main(source_files: list, cfg):
     statement_count = 0
     sequences_lengths = []
     for source_file in source_files:
-        sequences = source_file._tree.getStatementSequences(size_threshold=cfg.size_threshold)
+        sequences = get_statement_sequences(source_file._tree, size_threshold=cfg.size_threshold)
         statement_sequences += sequences
         sequences_lengths += [len(s) for s in sequences]
         statement_count += sum([len(s) for s in sequences])
